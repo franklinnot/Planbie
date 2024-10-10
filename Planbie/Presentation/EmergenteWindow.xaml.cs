@@ -32,26 +32,48 @@ namespace Presentation
 
         private void AbrirPuerto_Click(object sender, RoutedEventArgs e)
         {
-            string puertoSeleccionado = cmbPuertos.SelectedItem as string;
-
-            if (!string.IsNullOrEmpty(puertoSeleccionado))
+            // Si el puerto ya está abierto, cerrarlo
+            if (puertoSerial != null && puertoSerial.IsOpen)
             {
                 try
                 {
-                    // Inicializar el puerto serial y abrirlo
-                    puertoSerial = new SerialPort(puertoSeleccionado);
-                    puertoSerial.Open();
-
-                    MessageBox.Show($"Puerto {puertoSeleccionado} abierto con éxito.");
+                    puertoSerial.Close();
+                    MessageBox.Show("Puerto cerrado con éxito.");
+                    // Rehabilitar el ComboBox y cambiar el texto del botón
+                    cmbPuertos.IsEnabled = true;
+                    (sender as Button).Content = "Abrir Conexión";
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Error al abrir el puerto: {ex.Message}");
+                    MessageBox.Show($"Error al cerrar el puerto: {ex.Message}");
                 }
             }
             else
             {
-                MessageBox.Show("Selecciona un puerto :)");
+                string puertoSeleccionado = cmbPuertos.SelectedItem as string;
+
+                if (!string.IsNullOrEmpty(puertoSeleccionado))
+                {
+                    try
+                    {
+                        // Inicializar el puerto serial y abrirlo
+                        puertoSerial = new SerialPort(puertoSeleccionado);
+                        puertoSerial.Open();
+
+                        MessageBox.Show($"Puerto {puertoSeleccionado} abierto con éxito.");
+                        // Deshabilitar el ComboBox y cambiar el texto del botón
+                        cmbPuertos.IsEnabled = false;
+                        (sender as Button).Content = "Cerrar Conexión";
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Error al abrir el puerto: {ex.Message}");
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("Selecciona un puerto :)");
+                }
             }
         }
     }
