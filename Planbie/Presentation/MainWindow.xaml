@@ -46,7 +46,7 @@
             </hc:FlexPanel>
             <!-- Puertos -->
             <hc:FlexPanel Height="25" Margin="8,0,0,0">
-                <Button Background="{x:Null}" BorderBrush="{x:Null}" Height="25" Width="60" Padding="0,0,0,0" Cursor="Hand">
+                <Button Background="{x:Null}" BorderBrush="{x:Null}" Height="25" Width="60" Padding="0,0,0,0" Cursor="Hand" Click="AbrirVentanaPuertos">
                     <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="#FFEDEDED">Puertos
                     <Image Source="{svgc:SvgImage Source=/Resources/door-exit-white.svg, AppName=Presentation}" Width="10" Height="10" Margin="0,0,0,-0.8"/>
                     </TextBlock>

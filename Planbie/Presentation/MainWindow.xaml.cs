@@ -20,5 +20,13 @@ namespace Presentation
         {
             InitializeComponent();
         }
+        private void AbrirVentanaPuertos(object sender, RoutedEventArgs e)
+        {
+            // Crear una nueva instancia de la ventana de Puertos
+            EmergenteWindow puertosWindow = new EmergenteWindow();
+
+            // Mostrar la ventana como modal (ventana emergente)
+            puertosWindow.ShowDialog();
+        }
     }
 }
