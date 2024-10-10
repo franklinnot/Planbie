@@ -1,0 +1,145 @@
+﻿<Window x:Class="Presentation.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        
+        xmlns:hc="https://handyorg.github.io/handycontrol"
+        xmlns:svgc="http://sharpvectors.codeplex.com/svgc/"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        
+        xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
+        
+        xmlns:local="clr-namespace:Presentation"
+        
+        mc:Ignorable="d"
+        Title="Planbie" Height="750" Width="600" WindowStyle="None" ResizeMode="NoResize" WindowStartupLocation="CenterScreen">
+
+    <Window.Resources>
+        <!-- Outfit -->
+        <FontFamily x:Key="Outfit">/Presentation;component/Resources/#Outfit Regular</FontFamily>
+        <FontFamily x:Key="Outfit-SemiBold">/Presentation;component/Resources/#Outfit SemiBold</FontFamily>
+        <local:TimeAxisLabelConverter x:Key="TimeAxisLabelConverter"/>
+    </Window.Resources>
+
+    <Grid Background="#FF2B2B2B">
+
+        <!-- Definicion del grid -->
+        <Grid.RowDefinitions>
+            <RowDefinition Height="25"></RowDefinition>
+            <RowDefinition Height="*"></RowDefinition>
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"></ColumnDefinition>
+                <ColumnDefinition Width="*"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+        </Grid>
+
+        <Border Grid.Row="0" Width="600" BorderThickness="0,0,0,1" BorderBrush="#FF4E4E4E" Panel.ZIndex="100"></Border>
+
+        <!-- Header -->
+        <hc:FlexPanel Grid.Row="0" Width="600" Height="25">
+            <!-- Logo -->
+            <hc:FlexPanel Height="25" Margin="8,0,-8,0">
+                <Image Source="{svgc:SvgImage Source=/Resources/loguito.svg, AppName=Presentation}" Width="16"></Image>
+            </hc:FlexPanel>
+            <!-- Puertos -->
+            <hc:FlexPanel Height="25" Margin="8,0,0,0">
+                <Button Background="{x:Null}" BorderBrush="{x:Null}" Height="25" Width="60" Padding="0,0,0,0" Cursor="Hand">
+                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="#FFEDEDED">Puertos
+                    <Image Source="{svgc:SvgImage Source=/Resources/door-exit-white.svg, AppName=Presentation}" Width="10" Height="10" Margin="0,0,0,-0.8"/>
+                    </TextBlock>
+                </Button>
+            </hc:FlexPanel>
+
+            <!-- Leds y buzzer -->
+            <hc:FlexPanel Margin="166,0,-165,0">
+                <!-- Leds -->
+                <hc:FlexPanel Height="25" JustifyContent="SpaceBetween">
+                    <Button Height="25" Width="25" Background="{x:Null}" BorderBrush="{x:Null}" Padding="0,0,0,0" Cursor="Hand">
+                        <Ellipse Width="12" Height="12" Fill="#FFFF1349" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Button>
+                    <Button Height="25" Width="25" Background="{x:Null}" BorderBrush="{x:Null}" Padding="0,0,0,0" Cursor="Hand">
+                        <Ellipse Width="12" Height="12" Fill="#FFFFD613" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Button>
+                    <Button Height="25" Width="25" Background="{x:Null}" BorderBrush="{x:Null}" Padding="0,0,0,0" Cursor="Hand">
+                        <Ellipse Width="12" Height="12" Fill="#FF13D9FF" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Button>
+                </hc:FlexPanel>
+                <!-- Alarma/Buzzer -->
+                <hc:FlexPanel Height="25" Width="25">
+                    <Button Height="25" Width="25" Background="{x:Null}" BorderBrush="{x:Null}" Padding="0,0,0,0" Cursor="Hand">
+                        <Image Source="{svgc:SvgImage Source=/Resources/volume-full.svg, AppName=Presentation}" Width="12" Height="12"></Image>
+                    </Button>
+                </hc:FlexPanel>
+            </hc:FlexPanel>
+
+            <!-- Minimizar y maximizar -->
+            <hc:FlexPanel Height="24" Margin="365,0,-365,0" Panel.ZIndex="200">
+                <Button Height="24" Width="24" Background="#FF2B2B2B" BorderBrush="{x:Null}" Padding="0,0,0,0" Cursor="Hand">
+                    <Image Source="{svgc:SvgImage Source=/Resources/minimize.svg}" Width="8"></Image>
+                </Button>
+                <Button Height="24" Width="24" Background="#FF2B2B2B" BorderBrush="{x:Null}" Padding="0,0,0,0" Cursor="Hand">
+                    <Image Source="{svgc:SvgImage Source=/Resources/close-x.svg}" Width="8" ></Image>
+                </Button>
+            </hc:FlexPanel>
+        </hc:FlexPanel>
+
+        <!-- Segunda fila -->
+        <!-- Temperatura -->
+        <hc:FlexPanel  FlexDirection="Column" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="50,39,0,0" Height="234" Grid.Row="1">
+            <TextBlock HorizontalAlignment="Center" Foreground="#FFFFFFFF" FontFamily="{StaticResource Outfit-SemiBold}" FontSize="16" Height="24" VerticalAlignment="Center">Temperatura</TextBlock>
+
+            <hc:CircleProgressBar Value="75" Text="75°C" Width="200" Height="200" Background="#FFDEDEDE" Margin="0,9,0,-9">
+                <hc:CircleProgressBar.Foreground>
+                    <LinearGradientBrush EndPoint="1,0">
+                        <GradientStop Color="#FFFFA84F" Offset="1"/>
+                        <GradientStop Color="#FF7D91FF" Offset="0"/>
+                    </LinearGradientBrush>
+                </hc:CircleProgressBar.Foreground>
+            </hc:CircleProgressBar>
+        </hc:FlexPanel>
+        <!-- Plantita -->
+        <hc:FlexPanel  FlexDirection="Column" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,39,50,0" Height="234" Grid.Row="1">
+            <TextBlock HorizontalAlignment="Center" Foreground="#FFFFFFFF" FontFamily="{StaticResource Outfit-SemiBold}" FontSize="16" Height="24" VerticalAlignment="Center">Tu plantita</TextBlock>
+
+            <Image Width="200" Height="200" Margin="0,9,0,-9" Source="{svgc:SvgImage Source=/Resources/leaf-good.svg}"></Image>
+        </hc:FlexPanel>
+
+
+        <!-- Tercera fila - temperatura respecto al tiempo -->
+        <hc:FlexPanel Grid.Row="1" Margin="50,308,50,32" FlexDirection="Column" Width="500">
+            <TextBlock Grid.Row="0" Text="Temperatura respecto al tiempo" 
+               FontSize="18" Foreground="White" 
+               HorizontalAlignment="Center" Margin="0,15,0,-5"/>
+            <lvc:CartesianChart Grid.Row="1" Margin="0,10" Height="280">
+                <lvc:CartesianChart.Series>
+                    <lvc:LineSeries Values="5,9,8,6,1,5,7,3,6,3" 
+                            Stroke="#CD2156" 
+                            StrokeThickness="2" 
+                            Fill="Transparent"/>
+                </lvc:CartesianChart.Series>
+                <lvc:CartesianChart.AxisX>
+                    <lvc:Axis Title="Tiempo" Foreground="#64FFFFFF" FontSize="12">
+                        <lvc:Axis.Separator>
+                            <lvc:Separator Step="2" />
+                        </lvc:Axis.Separator>
+                        <lvc:Axis.LabelFormatter>
+                            <MultiBinding Converter="{StaticResource TimeAxisLabelConverter}">
+                                <Binding Path="Value" />
+                                <Binding Source="{x:Static sys:DateTime.Now}" />
+                            </MultiBinding>
+                        </lvc:Axis.LabelFormatter>
+                    </lvc:Axis>
+                </lvc:CartesianChart.AxisX>
+                <lvc:CartesianChart.AxisY>
+                    <lvc:Axis Title="Temperatura (°C)" Foreground="#64FFFFFF" FontSize="12"/>
+                </lvc:CartesianChart.AxisY>
+            </lvc:CartesianChart>
+            <TextBlock Text="Temperatura promedio en las 2 últimas horas " Foreground="#FFDEDEDE" FontSize="14" Margin="0,-2,0,6" HorizontalAlignment="Center"/>
+            <TextBlock Text="20.45 °C" Foreground="White" FontSize="24" FontWeight="Bold" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,-3,0,0"/>
+        </hc:FlexPanel>
+
+    </Grid>
+</Window>
