@@ -1,24 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 using System.IO.Ports;
-
+using System.Windows;
 
 namespace Presentation
 {
-    /// <summary>
-    /// Lógica de interacción para EmergenteWindow.xaml
-    /// </summary>
     public partial class EmergenteWindow : Window
     {
         private SerialPort puertoSerial;
@@ -26,10 +11,36 @@ namespace Presentation
         public EmergenteWindow()
         {
             InitializeComponent();
-            cmbPuertos.ItemsSource = SerialPort.GetPortNames();
-
+            CargarPuertosDisponibles();  // Cargar puertos al iniciar
         }
 
+        // Método para cargar los puertos disponibles en el ComboBox
+        private void CargarPuertosDisponibles()
+        {
+            string[] puertos = SerialPort.GetPortNames(); // Obtener los nombres de los puertos disponibles
+
+            if (puertos.Length > 0)  // Si hay puertos disponibles
+            {
+                cmbPuertos.ItemsSource = puertos;   // Cargar los puertos en el ComboBox
+                cmbPuertos.SelectedIndex = 0;       // Seleccionar el primer puerto por defecto
+                btnAbrirPuerto.IsEnabled = true;    // Habilitar el botón para abrir/cerrar
+            }
+            else  // Si no hay puertos disponibles
+            {
+                cmbPuertos.ItemsSource = new string[] { "No hay puertos disponibles" };  // Mostrar mensaje en el ComboBox
+                cmbPuertos.SelectedIndex = 0;
+                 
+                btnAbrirPuerto.IsEnabled = false;    // Deshabilitar el botón
+            }
+        }
+
+        // Evento para recargar puertos disponibles al hacer clic en el ComboBox
+        private void cmbPuertos_DropDownOpened(object sender, EventArgs e)
+        {
+            CargarPuertosDisponibles();  // Recargar los puertos cuando se abre el ComboBox
+        }
+
+        // Método para abrir/cerrar el puerto serial al hacer clic en el botón
         private void AbrirPuerto_Click(object sender, RoutedEventArgs e)
         {
             // Si el puerto ya está abierto, cerrarlo
@@ -39,9 +50,11 @@ namespace Presentation
                 {
                     puertoSerial.Close();
                     MessageBox.Show("Puerto cerrado con éxito.");
+
                     // Rehabilitar el ComboBox y cambiar el texto del botón
                     cmbPuertos.IsEnabled = true;
-                    (sender as Button).Content = "Abrir Conexión";
+                    btnAbrirPuerto.Content = "Abrir Conexión";
+                    CargarPuertosDisponibles();  // Recargar puertos disponibles
                 }
                 catch (Exception ex)
                 {
@@ -52,7 +65,7 @@ namespace Presentation
             {
                 string puertoSeleccionado = cmbPuertos.SelectedItem as string;
 
-                if (!string.IsNullOrEmpty(puertoSeleccionado))
+                if (!string.IsNullOrEmpty(puertoSeleccionado) && puertoSeleccionado != "No hay puertos disponibles")
                 {
                     try
                     {
@@ -63,7 +76,7 @@ namespace Presentation
                         MessageBox.Show($"Puerto {puertoSeleccionado} abierto con éxito.");
                         // Deshabilitar el ComboBox y cambiar el texto del botón
                         cmbPuertos.IsEnabled = false;
-                        (sender as Button).Content = "Cerrar Conexión";
+                        btnAbrirPuerto.Content = "Cerrar Conexión";
                     }
                     catch (Exception ex)
                     {
@@ -72,9 +85,15 @@ namespace Presentation
                 }
                 else
                 {
-                    MessageBox.Show("Selecciona un puerto :)");
+                    MessageBox.Show("Selecciona un puerto válido.");
                 }
             }
+        }
+
+        // Método para cerrar la ventana
+        private void btn_cerrar_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
         }
     }
 }

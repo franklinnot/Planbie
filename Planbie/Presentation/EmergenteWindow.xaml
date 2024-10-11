@@ -3,30 +3,50 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        
+        xmlns:svgc="http://sharpvectors.codeplex.com/svgc/"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        
+        xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
+        
         xmlns:local="clr-namespace:Presentation"
+        
+        
         mc:Ignorable="d"
-        Title="EmergenteWindow" Height="125" Width="600" WindowStyle="None" HorizontalContentAlignment="Stretch">
+        Title="EmergenteWindow" Height="125" Width="400" WindowStyle="None" ResizeMode="NoResize" Topmost="True" WindowStartupLocation="CenterScreen">
 
     <Window.Resources>
         <FontFamily x:Key="Outfit">/Presentation;component/Resources/#Outfit Regular</FontFamily>
         <FontFamily x:Key="Outfit-SemiBold">/Presentation;component/Resources/#Outfit SemiBold</FontFamily>
-      
+
     </Window.Resources>
 
-    <Grid Background="#FF2B2B2B" RenderTransformOrigin="0.5,0.412" Margin="0,0,0,-6">
+    <Grid Background="#FF2B2B2B">
 
+
+        <Button x:Name="btn_cerrar" Height="24" Width="24" Background="#FF2B2B2B" BorderBrush="{x:Null}" Padding="0,0,0,0" Cursor="Hand" Click="btn_cerrar_Click" Margin="326,0,0,101">
+            <Image Source="{svgc:SvgImage Source=/Resources/close-x.svg}" Width="8" ></Image>
+        </Button>
 
         <!-- Etiqueta para el ComboBox -->
-        <TextBlock Margin="59,36,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Foreground="White">Seleccionar Puerto:</TextBlock>
+        <TextBlock Margin="54,39,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Foreground="White">Seleccionar Puerto:</TextBlock>
 
         <!-- ComboBox - seleccionar puerto -->
-        <ComboBox x:Name="cmbPuertos" Width="329" Height="30" 
-                  HorizontalAlignment="Left" Margin="59,56,0,0" VerticalAlignment="Top" Background="#FF6F6F6F" BorderBrush="White">
+        <ComboBox x:Name="cmbPuertos" Width="200" Height="30" HorizontalAlignment="Left" Margin="54,59,0,0" VerticalAlignment="Top" Background="#FFEDEDED" BorderBrush="{x:Null}" DropDownOpened="cmbPuertos_DropDownOpened">
+
         </ComboBox>
 
         <!-- ABRRRRIR Puerto :,D -->
-        <Button Content="Abrir Conexión" Width="146" 
-                HorizontalAlignment="Left" Margin="393,56,0,45" Click="AbrirPuerto_Click" RenderTransformOrigin="0.57,1.267" Background="#FFF5E85A" BorderBrush="#FFB3A508" Foreground="White"/>
+        <Button x:Name="btnAbrirPuerto" Click="AbrirPuerto_Click" BorderBrush="{x:Null}" BorderThickness="0,0,0,0" Height="30" Margin="259,59,61,36" Width="80">
+            <TextBlock Foreground="White" >Abrir puerto</TextBlock>
+            <Button.Template>
+                <ControlTemplate TargetType="Button">
+                    <Border CornerRadius="8" Background="#FF660CA7">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                </ControlTemplate>
+            </Button.Template>
+        </Button>
 
     </Grid>
 </Window>
