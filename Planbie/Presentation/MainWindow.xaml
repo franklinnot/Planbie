@@ -34,7 +34,7 @@
                 <ColumnDefinition Width="*"></ColumnDefinition>
                 <ColumnDefinition Width="*"></ColumnDefinition>
             </Grid.ColumnDefinitions>
-            <Button x:Name="btn_add" Content="Button" HorizontalAlignment="Left" Margin="250,38,0,0" VerticalAlignment="Top" Click="btn_add_Click"/>
+            <Button x:Name="btn_add" Content="Button" HorizontalAlignment="Left" Margin="250,38,0,0" VerticalAlignment="Top" />
         </Grid>
 
         <Border Grid.Row="0" Width="900" BorderThickness="0,0,0,1" BorderBrush="#FF4E4E4E" Panel.ZIndex="100"></Border>
@@ -70,7 +70,7 @@
                 </hc:FlexPanel>
                 <!-- Alarma/Buzzer -->
                 <hc:FlexPanel Height="25" Width="25">
-                    <Button Height="25" Width="25" Background="{x:Null}" BorderBrush="{x:Null}" Padding="0,0,0,0" Cursor="Hand">
+                    <Button x:Name="btnApagarBuzzer" Height="25" Width="25" Background="{x:Null}" BorderBrush="{x:Null}" Padding="0,0,0,0" Cursor="Hand" Click="btnApagarBuzzer_Click">
                         <Image Source="{svgc:SvgImage Source=/Resources/volume-full.svg, AppName=Presentation}" Width="12" Height="12"></Image>
                     </Button>
                 </hc:FlexPanel>
@@ -93,7 +93,7 @@
             <hc:FlexPanel  FlexDirection="Column" Height="234">
                 <TextBlock HorizontalAlignment="Center" Foreground="#FFFFFFFF" FontFamily="{StaticResource Outfit-SemiBold}" FontSize="16" Height="24" VerticalAlignment="Center">Temperatura</TextBlock>
 
-                <hc:CircleProgressBar Value="75" Text="75°C" Width="200" Height="200" Background="#FFDEDEDE" Margin="0,9,0,-9">
+                <hc:CircleProgressBar x:Name="mostrar_temperatura" Value="75" Text="75°C" Width="200" Height="200" Background="#FFDEDEDE" Margin="0,9,0,-9">
                     <hc:CircleProgressBar.Foreground>
                         <LinearGradientBrush EndPoint="1,0">
                             <GradientStop Color="#FFFFA84F" Offset="1"/>
@@ -113,7 +113,7 @@
             <!-- Humedad -->
             <hc:FlexPanel  FlexDirection="Column" Width="200" Margin="0,58,0,18">
                 <TextBlock HorizontalAlignment="Center" Foreground="#FFFFFFFF" FontFamily="{StaticResource Outfit-SemiBold}" FontSize="16" Height="24" VerticalAlignment="Center">Humedad</TextBlock>
-                <hc:WaveProgressBar Width="198" Value="20" Background="Transparent" Margin="1,8,1,-9" Foreground="White" >
+                <hc:WaveProgressBar x:Name="mostrar_humedad" Width="198" Value="20" Background="Transparent" Margin="1,8,1,-9" Foreground="White" >
 
                 </hc:WaveProgressBar>
             </hc:FlexPanel>

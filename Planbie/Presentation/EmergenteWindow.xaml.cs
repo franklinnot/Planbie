@@ -6,8 +6,8 @@ namespace Presentation
 {
     public partial class EmergenteWindow : Window
     {
-        private SerialPort puertoSerial;
-
+        public static SerialPort puertoSerial;
+        public static string puertito = "";
         public EmergenteWindow()
         {
             InitializeComponent();
@@ -72,7 +72,7 @@ namespace Presentation
                         // Inicializar el puerto serial y abrirlo
                         puertoSerial = new SerialPort(puertoSeleccionado);
                         puertoSerial.Open();
-
+                        puertito = puertoSeleccionado;
                         MessageBox.Show($"Puerto {puertoSeleccionado} abierto con éxito.");
                         // Deshabilitar el ComboBox y cambiar el texto del botón
                         cmbPuertos.IsEnabled = false;

@@ -1,0 +1,74 @@
+﻿using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
+using System.IO.Ports;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Presentation
+{
+    public class ArduinoInteraction
+    {
+        private SerialPort _serialPort;
+
+        public ArduinoInteraction(SerialPort serialPort)
+        {
+            _serialPort = serialPort;
+        }
+
+        public async Task<string> SendCommand(string command)
+        {
+            if (_serialPort == null || !_serialPort.IsOpen)
+                throw new InvalidOperationException("Serial port is not open.");
+
+            _serialPort.WriteLine(command);
+
+            return await Task.Run(() => _serialPort.ReadLine());
+        }
+
+
+        public async Task SendCommandSR(string command)
+        {
+            if (_serialPort == null || !_serialPort.IsOpen)
+                throw new InvalidOperationException("Serial port is not open.");
+
+            _serialPort.WriteLine(command);
+        }
+
+        public async Task<JObject> CollectData()
+        {
+            string response = await SendCommand("RECOLECTAR_DATOS");
+            return JObject.Parse(response);
+        }
+
+        public async Task TurnOffLED()
+        {
+            await SendCommand("APAGAR_LED");
+        }
+
+        public async Task TurnOffBuzzer()
+        {
+            await SendCommandSR("APAGAR_BUZZER");
+            
+        }
+
+        public async Task StartDataCollection(Action<JObject> onDataReceived)
+        {
+            while (_serialPort.IsOpen)
+            {
+                try
+                {
+                    JObject data = await CollectData();
+                    onDataReceived(data);
+                    await Task.Delay(1000); // Collect data every second
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error collecting data: {ex.Message}");
+                    // Considerar agregar un mecanismo para notificar errores a la UI
+                }
+            }
+        }
+    }
+}

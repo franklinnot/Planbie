@@ -1,21 +1,17 @@
 ﻿using LiveCharts.Defaults;
 using LiveCharts;
-using System.Text;
+using System;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using LiveCharts.Wpf;
+using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.IO;
 using System.Diagnostics;
-using System.Text.Json;
+using System.IO.Ports;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace Presentation
 {
@@ -23,6 +19,9 @@ namespace Presentation
     {
         private ChartValues<double> temperatureValues;
         private const string archivoJson = "temperatures.json";
+        private ArduinoInteraction arduinoInteraction;
+        private CancellationTokenSource cts;
+        private int dataCounter = 0;
 
         public MainWindow()
         {
@@ -30,7 +29,6 @@ namespace Presentation
 
             temperatureValues = new ChartValues<double>();
 
-            // Configura el gráfico con una serie de líneas
             temperatureChart.Series = new SeriesCollection
             {
                 new LineSeries
@@ -40,7 +38,6 @@ namespace Presentation
                 }
             };
 
-            // Inicializa el eje X si es necesario
             if (temperatureChart.AxisX.Count == 0)
             {
                 temperatureChart.AxisX.Add(new Axis
@@ -49,20 +46,11 @@ namespace Presentation
                 });
             }
 
-            // Carga los datos iniciales desde el archivo JSON
             CargarDatosIniciales();
-
-
-            // Registros de prueba
-            //registrar_temperatura(12);
-            //registrar_temperatura(18);
-            //registrar_temperatura(24);
         }
 
-        #region Mostrar la tempratura respecto al tiempo
         private void CargarDatosIniciales()
         {
-            // Lee los datos y agrega al gráfico
             foreach (TempData data in LeerDatos())
             {
                 AddTemperatureReading(data);
@@ -71,10 +59,9 @@ namespace Presentation
 
         public static List<TempData> LeerDatos()
         {
-            // Verifica si el archivo existe antes de leer
             if (!File.Exists(archivoJson))
             {
-                return new List<TempData>(); // Si no existe, devuelve una lista vacía
+                return new List<TempData>();
             }
 
             string json = File.ReadAllText(archivoJson);
@@ -87,7 +74,7 @@ namespace Presentation
             registros.Add(nuevoRegistro);
             GuardarDatos(registros);
 
-            Debug.WriteLine(JsonConvert.SerializeObject(registros, Formatting.Indented)); // Solo para depuración
+            Debug.WriteLine(JsonConvert.SerializeObject(registros, Formatting.Indented));
         }
 
         public static void GuardarDatos(List<TempData> registros)
@@ -96,44 +83,91 @@ namespace Presentation
             File.WriteAllText(archivoJson, json);
         }
 
-        // Método para agregar una nueva lectura de temperatura
         public void AddTemperatureReading(TempData data)
         {
-            // Agrega la nueva temperatura
             temperatureValues.Add(data.Temperatura);
 
-            // Obtiene las etiquetas del eje X
             var labels = temperatureChart.AxisX[0].Labels as List<string> ?? new List<string>();
-
-            // Agrega la nueva etiqueta de tiempo
             labels.Add(data.Fecha.ToString("HH:mm:ss"));
-
-            // Actualiza las etiquetas del eje X
             temperatureChart.AxisX[0].Labels = labels;
         }
-        #endregion
 
-        // Método para registrar una nueva temperatura
-        private void registrar_temperatura(double temperatura)
+        private async void StartDataCollection()
         {
-            // Crear un nuevo registro de temperatura
-            var nuevoRegistro = new TempData
+            if (EmergenteWindow.puertoSerial != null && EmergenteWindow.puertoSerial.IsOpen)
+            {
+                arduinoInteraction = new ArduinoInteraction(EmergenteWindow.puertoSerial);
+                cts = new CancellationTokenSource();
+
+                await Task.Run(async () =>
+                {
+                    while (!cts.Token.IsCancellationRequested)
+                    {
+                        try
+                        {
+                            JObject data = await arduinoInteraction.CollectData();
+                            Dispatcher.Invoke(() => OnDataReceived(data));
+                            await Task.Delay(1000, cts.Token); // Espera 1 segundo antes de la próxima lectura
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            break;
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine($"Error collecting data: {ex.Message}");
+                        }
+                    }
+                }, cts.Token);
+            }
+            else
+            {
+                MessageBox.Show("El puerto serial no está abierto. Por favor, conéctese primero.");
+            }
+        }
+
+        private void OnDataReceived(JObject data)
+        {
+            double temperatura = data["temperatura"].Value<double>();
+            var tempData = new TempData
             {
                 Fecha = DateTime.Now,
                 Temperatura = temperatura
             };
 
-            // Agregar el nuevo registro
-            AgregarRegistro(nuevoRegistro);
+            AddTemperatureReading(tempData);
 
-            // Actualizar el gráfico con la nueva temperatura
-            AddTemperatureReading(nuevoRegistro);
+            // Actualizar la UI con los últimos valores
+            //txtTemperatura.Text = $"Temperatura: {temperatura}°C";
+            //txtHumedad.Text = $"Humedad: {data["humedad"]}%";
+            //txtDistancia.Text = $"Distancia: {data["distancia"]} cm";
+            //txtBoton.Text = $"Estado del botón: {(data["boton"].Value<int>() == 1 ? "Presionado" : "No presionado")}";
+            mostrar_humedad.Value = double.Parse((data["humedad"]).ToString());
+            mostrar_temperatura.Value = temperatura;
+            mostrar_temperatura.Text = $"{temperatura.ToString()}°C";
+            // Guardar datos cada 3 segundos
+            dataCounter++;
+            if (dataCounter % 3 == 0)
+            {
+                Task.Run(() => AgregarRegistro(tempData));
+            }
         }
 
-        private void btn_add_Click(object sender, RoutedEventArgs e)
+        private async void btnApagarLED_Click(object sender, RoutedEventArgs e)
         {
-            Random random = new Random();
-            registrar_temperatura(random.Next(-5, 37));
+            if (arduinoInteraction != null)
+            {
+                await arduinoInteraction.TurnOffLED();
+            }
+        }
+
+        private async void btnApagarBuzzer_Click(object sender, RoutedEventArgs e)
+        {
+            if (arduinoInteraction != null)
+            {
+                await arduinoInteraction.TurnOffBuzzer();
+                MessageBox.Show("Apagué tu feo Bauser");
+            }
         }
 
         private void btn_minimizar_Click(object sender, RoutedEventArgs e)
@@ -143,25 +177,45 @@ namespace Presentation
 
         private void btn_cerrar_Click(object sender, RoutedEventArgs e)
         {
+            cts?.Cancel();
             this.Close();
         }
 
         private void panel_header_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            // Verificar si el botón izquierdo fue presionado
-            if (e.ChangedButton == System.Windows.Input.MouseButton.Left)
+            if (e.ChangedButton == MouseButton.Left)
             {
-                // Mover la ventana
                 this.DragMove();
             }
         }
+
         private void AbrirVentanaPuertos(object sender, RoutedEventArgs e)
         {
-            // Crear una nueva instancia de la ventana de Puertos
             EmergenteWindow puertosWindow = new EmergenteWindow();
-
-            // Mostrar la ventana como modal (ventana emergente)
             puertosWindow.ShowDialog();
+
+            if (EmergenteWindow.puertoSerial != null && EmergenteWindow.puertoSerial.IsOpen)
+            {
+                StartDataCollection();
+            }
+        }
+
+        private void registrar_temperatura(double temperatura)
+        {
+            var nuevoRegistro = new TempData
+            {
+                Fecha = DateTime.Now,
+                Temperatura = temperatura
+            };
+
+            AgregarRegistro(nuevoRegistro);
+            AddTemperatureReading(nuevoRegistro);
+        }
+
+        private void btn_add_Click(object sender, RoutedEventArgs e)
+        {
+            Random random = new Random();
+            registrar_temperatura(random.Next(-5, 37));
         }
     }
 
