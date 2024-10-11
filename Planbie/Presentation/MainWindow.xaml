@@ -58,14 +58,14 @@
             <hc:FlexPanel Margin="316,0,-315,0">
                 <!-- Leds -->
                 <hc:FlexPanel Height="25" JustifyContent="SpaceBetween">
-                    <Button Height="25" Width="25" Background="{x:Null}" BorderBrush="{x:Null}" Padding="0,0,0,0" Cursor="Hand">
-                        <Ellipse Width="12" Height="12" Fill="#FFFF1349" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <Button x:Name="led_Rojo" Height="25" Width="25" Background="{x:Null}" BorderBrush="{x:Null}" Padding="0,0,0,0" Cursor="Hand" Click="led_Rojo_Click">
+                        <Ellipse x:Name="elip_Rojo" Width="12" Height="12" Fill="#FFFF1349" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Button>
-                    <Button Height="25" Width="25" Background="{x:Null}" BorderBrush="{x:Null}" Padding="0,0,0,0" Cursor="Hand">
-                        <Ellipse Width="12" Height="12" Fill="#FFFFD613" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <Button x:Name="led_Amarillo" Height="25" Width="25" Background="{x:Null}" BorderBrush="{x:Null}" Padding="0,0,0,0" Cursor="Hand" Click="led_Amarillo_Click">
+                        <Ellipse x:Name="elip_Amarillo" Width="12" Height="12" Fill="#FFFFD613" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Button>
-                    <Button Height="25" Width="25" Background="{x:Null}" BorderBrush="{x:Null}" Padding="0,0,0,0" Cursor="Hand">
-                        <Ellipse Width="12" Height="12" Fill="#FF13D9FF" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <Button  x:Name="led_Azul" Height="25" Width="25" Background="{x:Null}" BorderBrush="{x:Null}" Padding="0,0,0,0" Cursor="Hand" Click="led_Azul_Click">
+                        <Ellipse x:Name="elip_Azul" Width="12" Height="12" Fill="#FF13D9FF" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Button>
                 </hc:FlexPanel>
                 <!-- Alarma/Buzzer -->
@@ -107,7 +107,7 @@
             <hc:FlexPanel  FlexDirection="Column" Height="234">
                 <TextBlock HorizontalAlignment="Center" Foreground="#FFFFFFFF" FontFamily="{StaticResource Outfit-SemiBold}" FontSize="16" Height="24" VerticalAlignment="Center">Tu plantita</TextBlock>
 
-                <Image Width="200" Height="200" Margin="0,9,0,-9" Source="{svgc:SvgImage Source=/Resources/leaf-good.svg}"></Image>
+                <Image x:Name="img_planta" Width="200" Height="200" Margin="0,9,0,-9" Source="{svgc:SvgImage Source=/Resources/leaf-good.svg}"></Image>
             </hc:FlexPanel>
 
             <!-- Humedad -->

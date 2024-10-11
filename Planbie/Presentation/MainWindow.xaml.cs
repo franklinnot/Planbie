@@ -12,7 +12,12 @@ using System.Diagnostics;
 using System.IO.Ports;
 using System.Threading.Tasks;
 using System.Threading;
-
+using System.Diagnostics.Tracing;
+using System.Windows.Media;
+using SharpVectors.Converters;
+using SharpVectors.Renderers.Wpf;
+using SharpVectors.Renderers;
+using System;
 namespace Presentation
 {
     public partial class MainWindow : Window
@@ -26,7 +31,9 @@ namespace Presentation
         public MainWindow()
         {
             InitializeComponent();
-
+            elip_Azul.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF808080"));
+            elip_Amarillo.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF808080"));
+            elip_Rojo.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF808080"));
             temperatureValues = new ChartValues<double>();
 
             temperatureChart.Series = new SeriesCollection
@@ -126,9 +133,11 @@ namespace Presentation
             }
         }
 
-        private void OnDataReceived(JObject data)
+        private async void OnDataReceived(JObject data)
         {
             double temperatura = data["temperatura"].Value<double>();
+           
+            temperatura = Math.Round(temperatura);
             var tempData = new TempData
             {
                 Fecha = DateTime.Now,
@@ -140,9 +149,20 @@ namespace Presentation
             // Actualizar la UI con los últimos valores
             //txtTemperatura.Text = $"Temperatura: {temperatura}°C";
             //txtHumedad.Text = $"Humedad: {data["humedad"]}%";
-            //txtDistancia.Text = $"Distancia: {data["distancia"]} cm";
+            double distance = double.Parse(data["distancia"].ToString());
             //txtBoton.Text = $"Estado del botón: {(data["boton"].Value<int>() == 1 ? "Presionado" : "No presionado")}";
-            mostrar_humedad.Value = double.Parse((data["humedad"]).ToString());
+
+            if (data["boton"].ToString() == "REGANDO")
+            {
+                Debug.WriteLine("REGANDO");
+                elip_Azul.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF13D9FF"));
+            }
+            else
+            {
+                elip_Azul.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF808080"));
+            }
+            double humedad = double.Parse((data["humedad"]).ToString());
+            mostrar_humedad.Value = humedad;
             mostrar_temperatura.Value = temperatura;
             mostrar_temperatura.Text = $"{temperatura.ToString()}°C";
             // Guardar datos cada 3 segundos
@@ -151,6 +171,41 @@ namespace Presentation
             {
                 Task.Run(() => AgregarRegistro(tempData));
             }
+            // Controla si la alerta de temperatura/humedad está activa
+            // Controla si la alerta de distancia está activa
+            
+
+            if ((humedad < 20 ))
+            {
+                // Si no está alertando la distancia, se ejecuta la alerta de temperatura/humedad
+                await arduinoInteraction.Alert_Temp();
+                elip_Amarillo.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFD613"));
+                //string newSvgPath = "/Resources/leaf-bad.svg";
+                //img_planta.SetValue(SvgImage.SourceProperty, new Uri(newSvgPath, UriKind.Relative));
+                
+            }
+            else 
+            {
+                
+                if (distance <= 7  )
+                {
+                    
+                    await arduinoInteraction.Alert_Buzzer();
+                    elip_Rojo.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFF1349"));
+                }
+                else 
+                {
+                    // Si no está alertando la temperatura/humedad, se vuelve al estado normal y se apaga el buzzer
+                    await arduinoInteraction.Good_State();
+                    await arduinoInteraction.TurnOffBuzzer();
+                    elip_Rojo.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF808080"));
+                    //elip_Azul.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF808080"));
+                    elip_Amarillo.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF808080"));
+                }
+            }
+
+            
+
         }
 
         private async void btnApagarLED_Click(object sender, RoutedEventArgs e)
@@ -216,6 +271,21 @@ namespace Presentation
         {
             Random random = new Random();
             registrar_temperatura(random.Next(-5, 37));
+        }
+
+        private void led_Rojo_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void led_Amarillo_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void led_Azul_Click(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 

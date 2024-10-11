@@ -52,6 +52,19 @@ namespace Presentation
             await SendCommandSR("APAGAR_BUZZER");
             
         }
+        public async Task Alert_Temp()
+        {
+            await SendCommandSR("ALERTA_TEMPERATURA");
+        }
+        public async Task Alert_Buzzer()
+        {
+            await SendCommandSR("ALERTA_BUZZER");
+        }
+
+        public async Task Good_State()
+        {
+            await SendCommandSR("ESTADO_CORRECTO");
+        }
 
         public async Task StartDataCollection(Action<JObject> onDataReceived)
         {
