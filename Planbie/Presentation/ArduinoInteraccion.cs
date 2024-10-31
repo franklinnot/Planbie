@@ -66,6 +66,18 @@ namespace Presentation
             await SendCommandSR("ESTADO_CORRECTO");
         }
 
+        public async Task Regando(int value)
+        {
+            if (value == 1)
+            {
+                await SendCommandSR("REGANDO");
+            }
+            else if (value == 0)
+            {
+                await SendCommandSR("NO_REGAR");
+            }
+        }
+
         public async Task StartDataCollection(Action<JObject> onDataReceived)
         {
             while (_serialPort.IsOpen)

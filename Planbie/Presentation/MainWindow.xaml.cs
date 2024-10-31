@@ -135,9 +135,8 @@ namespace Presentation
 
         private async void OnDataReceived(JObject data)
         {
-            double temperatura = data["temperatura"].Value<double>();
-           
-            temperatura = Math.Round(temperatura);
+            int temperatura = data["temperatura"].Value<int>();
+
             var tempData = new TempData
             {
                 Fecha = DateTime.Now,
@@ -149,18 +148,23 @@ namespace Presentation
             // Actualizar la UI con los últimos valores
             //txtTemperatura.Text = $"Temperatura: {temperatura}°C";
             //txtHumedad.Text = $"Humedad: {data["humedad"]}%";
-            double distance = double.Parse(data["distancia"].ToString());
+            //double distance = double.Parse(data["distancia"].ToString());
             //txtBoton.Text = $"Estado del botón: {(data["boton"].Value<int>() == 1 ? "Presionado" : "No presionado")}";
 
             if (data["boton"].ToString() == "REGANDO")
             {
-                Debug.WriteLine("REGANDO");
+                Debug.WriteLine("REGANDO -- boton");
+                await arduinoInteraction.Regando(1);
                 elip_Azul.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF13D9FF"));
             }
             else
             {
+                Debug.WriteLine("NO REGANDO -- boton");
+                await arduinoInteraction.Regando(0);
                 elip_Azul.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF808080"));
             }
+
+
             double humedad = double.Parse((data["humedad"]).ToString());
             mostrar_humedad.Value = humedad;
             mostrar_temperatura.Value = temperatura;
@@ -175,34 +179,17 @@ namespace Presentation
             // Controla si la alerta de distancia está activa
             
 
-            if ((humedad < 20 ))
+            if (humedad < 30 && temperatura > 35 )
             {
                 // Si no está alertando la distancia, se ejecuta la alerta de temperatura/humedad
                 await arduinoInteraction.Alert_Temp();
+                //await arduinoInteraction.Regando();
                 elip_Amarillo.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFD613"));
                 //string newSvgPath = "/Resources/leaf-bad.svg";
                 //img_planta.SetValue(SvgImage.SourceProperty, new Uri(newSvgPath, UriKind.Relative));
                 
             }
-            else 
-            {
-                
-                if (distance <= 7  )
-                {
-                    
-                    await arduinoInteraction.Alert_Buzzer();
-                    elip_Rojo.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFF1349"));
-                }
-                else 
-                {
-                    // Si no está alertando la temperatura/humedad, se vuelve al estado normal y se apaga el buzzer
-                    await arduinoInteraction.Good_State();
-                    await arduinoInteraction.TurnOffBuzzer();
-                    elip_Rojo.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF808080"));
-                    //elip_Azul.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF808080"));
-                    elip_Amarillo.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF808080"));
-                }
-            }
+            
 
             
 

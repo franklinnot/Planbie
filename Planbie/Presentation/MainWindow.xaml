@@ -34,7 +34,7 @@
                 <ColumnDefinition Width="*"></ColumnDefinition>
                 <ColumnDefinition Width="*"></ColumnDefinition>
             </Grid.ColumnDefinitions>
-            <Button x:Name="btn_add" Content="Button" HorizontalAlignment="Left" Margin="250,38,0,0" VerticalAlignment="Top" />
+            
         </Grid>
 
         <Border Grid.Row="0" Width="900" BorderThickness="0,0,0,1" BorderBrush="#FF4E4E4E" Panel.ZIndex="100"></Border>
