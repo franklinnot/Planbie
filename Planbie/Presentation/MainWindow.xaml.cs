@@ -1,5 +1,6 @@
 ﻿using LiveCharts;
 using LiveCharts.Wpf;
+using MQTT;
 using Newtonsoft.Json.Linq;
 using Presentation.Logica;
 using System.Diagnostics;
@@ -18,12 +19,94 @@ namespace Presentation
         private CancellationTokenSource cts;
         private int dataCounter = 0;
 
+        private System.Timers.Timer mqttTimer;
+
+
         public MainWindow()
         {
             InitializeComponent();
+            SeleccionWorkspace sw = new SeleccionWorkspace();
+            sw.ShowDialog();
 
             CargarDatosJson(); // codigo para cargar y configurar el grafico de temperatura respecto al tiempo
+            //RecibirMQTT();
+            //WindowLoad();
+        }
 
+
+
+
+        //Recibir 
+        public async Task RecibirMQTT()
+        {
+            var mqttClient = new ConectionMQTT();
+
+            mqttClient.OnMessageReceived += (topic, message) =>
+            {
+                // Solamente se recepcionarán datos del topic: "telemetria"
+                if (topic == "telemetria")
+                {
+                    Debug.WriteLine($"Datos de telemetría recibidos: {message}");
+                }
+            };
+
+            // Conectar al cliente MQTT
+            bool isConnected = await mqttClient.Connect();
+            if (!isConnected) return;
+
+            // Suscribirse a los tópicos
+            await mqttClient.Subscribe("comandos");
+            await mqttClient.Subscribe("telemetria");
+
+            Debug.WriteLine("Publicando mensajes con datos simulados...");
+        }
+
+        // Enviar
+
+        private void IniciarEnvioMQTT(ConectionMQTT mqttClient)
+        {
+            mqttTimer = new System.Timers.Timer(5000); // Configura el temporizador para 5 segundos
+            mqttTimer.Elapsed += async (sender, e) => await EnviarMQTT(mqttClient);
+            mqttTimer.AutoReset = true; // Para que se repita automáticamente cada 5 segundos
+            mqttTimer.Start();
+        }
+
+        private async Task EnviarMQTT(ConectionMQTT mqttClient)
+        {
+            var rand = new Random();
+            double temperature = 28.7;
+            double humidity = 23;
+
+            double temperaturaActual = temperature + rand.NextDouble();
+            double humedadActual = humidity + rand.NextDouble();
+
+            var payload = new
+            {
+                temperature = temperaturaActual,
+                humidity = humedadActual
+            };
+
+            await mqttClient.Publish("comandos", payload);
+
+            // Usa el Dispatcher de WPF para ejecutar en el hilo de la interfaz
+            await Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                Debug.WriteLine($"Datos enviados: Temperatura = {temperaturaActual}, Humedad = {humedadActual}");
+            });
+        }
+
+        private async Task WindowLoad()
+        {
+            var mqttClient = new ConectionMQTT();
+            bool isConnected = await mqttClient.Connect();
+
+            if (isConnected)
+            {
+                await mqttClient.Subscribe("comandos");
+                await mqttClient.Subscribe("telemetria");
+
+                IniciarEnvioMQTT(mqttClient); // Inicia el temporizador para el envío de datos cada 5 segundos
+            }
         }
 
         #region cargar los registros de temperaturas del json en el grafico temp/tiempo y configurarlo
@@ -243,6 +326,7 @@ namespace Presentation
         {
 
         }
+
     }
 
 }

@@ -1,4 +1,4 @@
-﻿<Window
+﻿<Window x:Name="window_main"
     x:Class="Presentation.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
