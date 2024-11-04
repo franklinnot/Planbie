@@ -80,7 +80,7 @@
     <Border
         Background="#FF2B2B2B"
         BorderBrush="#FF4B4B4B"
-        BorderThickness="0.8,0.8,0.8,0.8"
+        BorderThickness="1"
         CornerRadius="8,8,8,8">
         <Grid Background="Transparent">
 

@@ -14,7 +14,5 @@ namespace Presentation.Logica
     {
         public DateTime Fecha { get; set; }
         public double Temperatura { get; set; }
-
-
     }
 }

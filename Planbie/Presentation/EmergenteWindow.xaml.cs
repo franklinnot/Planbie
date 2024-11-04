@@ -139,6 +139,7 @@ namespace Presentation
         }
         #endregion
 
+        #region enventos enter & leave en el boton de abrir puerto
         private void btnAbrirPuerto_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
         {
             hoverBotonPort("enter");
@@ -173,14 +174,7 @@ namespace Presentation
             }
         }
 
-
-
-
-
-
-
-
-
+        #endregion
 
     }
 }

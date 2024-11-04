@@ -1,143 +1,336 @@
-﻿<Window x:Class="Presentation.MainWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        
-        xmlns:hc="https://handyorg.github.io/handycontrol"
-        xmlns:svgc="http://sharpvectors.codeplex.com/svgc/"
-        xmlns:sys="clr-namespace:System;assembly=mscorlib"
-        
-        xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
-        
-        xmlns:local="clr-namespace:Presentation"
-        
-        mc:Ignorable="d"
-        Title="Planbie" Height="820" Width="900" WindowStyle="None" ResizeMode="NoResize" WindowStartupLocation="CenterScreen">
+﻿<Window
+    x:Class="Presentation.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:hc="https://handyorg.github.io/handycontrol"
+    xmlns:local="clr-namespace:Presentation"
+    xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:svgc="http://sharpvectors.codeplex.com/svgc/"
+    xmlns:sys="clr-namespace:System;assembly=mscorlib"
+    Title="Planbie"
+    Width="900"
+    Height="820"
+    AllowsTransparency="True"
+    Background="Transparent"
+    ResizeMode="NoResize"
+    WindowStartupLocation="CenterScreen"
+    WindowStyle="None"
+    mc:Ignorable="d">
 
     <Window.Resources>
-        <!-- Outfit -->
+        <!--  Outfit  -->
         <FontFamily x:Key="Outfit">/Presentation;component/Resources/#Outfit Regular</FontFamily>
         <FontFamily x:Key="Outfit-SemiBold">/Presentation;component/Resources/#Outfit SemiBold</FontFamily>
+
+        <Style x:Key="btn-close" TargetType="Button">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border
+                            x:Name="border"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="0"
+                            CornerRadius="0, 12, 0, 0">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <!--  Efecto hover  -->
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="LightBlue" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <!--  Fondo por defecto  -->
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+
     </Window.Resources>
+    <Border
+        Background="#FF2B2B2B"
+        BorderBrush="#FF4B4B4B"
+        BorderThickness="1"
+        CornerRadius="12">
+        <Grid Background="Transparent">
 
-    <Grid Background="#FF2B2B2B">
+            <!--  Definicion del grid  -->
+            <Grid.RowDefinitions>
+                <RowDefinition Height="25" />
+                <RowDefinition Height="350" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <Grid Grid.Row="1" Margin="-1,0,1,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
 
-        <!-- Definicion del grid -->
-        <Grid.RowDefinitions>
-            <RowDefinition Height="25"></RowDefinition>
-            <RowDefinition Height="350"></RowDefinition>
-            <RowDefinition Height="*"></RowDefinition>
-        </Grid.RowDefinitions>
-        <Grid Grid.Row="1" Margin="-1,0,1,0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"></ColumnDefinition>
-                <ColumnDefinition Width="*"></ColumnDefinition>
-            </Grid.ColumnDefinitions>
-            
-        </Grid>
+            </Grid>
 
-        <Border Grid.Row="0" Width="900" BorderThickness="0,0,0,1" BorderBrush="#FF4E4E4E" Panel.ZIndex="100"></Border>
+            <Border
+                Grid.Row="0"
+                Width="900"
+                Panel.ZIndex="100"
+                BorderBrush="#FF4E4E4E"
+                BorderThickness="0,0,0,1" />
 
-        <!-- Header -->
-        <hc:FlexPanel x:Name="panel_header" Grid.Row="0" Width="900" Height="25" MouseDown="panel_header_MouseDown" Background="#FF2B2B2B">
-            <!-- Logo -->
-            <hc:FlexPanel Height="25" Margin="8,0,-8,0">
-                <Image Source="{svgc:SvgImage Source=/Resources/loguito.svg, AppName=Presentation}" Width="16"></Image>
+            <!--  Header  -->
+            <hc:FlexPanel
+                x:Name="panel_header"
+                Grid.Row="0"
+                Width="900"
+                Height="25"
+                Background="Transparent"
+                MouseDown="panel_header_MouseDown">
+                <!--  Logo  -->
+                <hc:FlexPanel Height="25" Margin="8,0,-8,0">
+                    <Image Width="16" Source="{svgc:SvgImage Source=/Resources/loguito.svg, AppName=Presentation}" />
+                </hc:FlexPanel>
+                <!--  Puertos  -->
+                <hc:FlexPanel Height="25" Margin="8,0,0,0">
+                    <Button
+                        Width="60"
+                        Height="25"
+                        Padding="0,0,0,0"
+                        Background="{x:Null}"
+                        BorderBrush="{x:Null}"
+                        Click="AbrirVentanaPuertos"
+                        Cursor="Hand">
+                        <TextBlock
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Foreground="#FFEDEDED">
+                            Puertos
+                            <Image
+                                Width="10"
+                                Height="10"
+                                Margin="0,0,0,-0.8"
+                                Source="{svgc:SvgImage Source=/Resources/door-exit-white.svg,
+                                                       AppName=Presentation}" />
+                        </TextBlock>
+                    </Button>
+                </hc:FlexPanel>
+
+                <!--  Leds y buzzer  -->
+                <hc:FlexPanel Margin="316,0,-315,0">
+                    <!--  Leds  -->
+                    <hc:FlexPanel Height="25" JustifyContent="SpaceBetween">
+                        <Button
+                            x:Name="led_Rojo"
+                            Width="25"
+                            Height="25"
+                            Padding="0,0,0,0"
+                            Background="{x:Null}"
+                            BorderBrush="{x:Null}"
+                            Click="led_Rojo_Click"
+                            Cursor="Hand">
+                            <Ellipse
+                                x:Name="elip_Rojo"
+                                Width="12"
+                                Height="12"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Fill="#FF808080" />
+                            <!--  Color en estado activo: #FFFF1349  -->
+                        </Button>
+                        <Button
+                            x:Name="led_Amarillo"
+                            Width="25"
+                            Height="25"
+                            Padding="0,0,0,0"
+                            Background="{x:Null}"
+                            BorderBrush="{x:Null}"
+                            Click="led_Amarillo_Click"
+                            Cursor="Hand">
+                            <Ellipse
+                                x:Name="elip_Amarillo"
+                                Width="12"
+                                Height="12"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Fill="#FF808080" />
+                            <!--  Color en estado activo: #FFFFD613  -->
+                        </Button>
+                        <Button
+                            x:Name="led_Azul"
+                            Width="25"
+                            Height="25"
+                            Padding="0,0,0,0"
+                            Background="{x:Null}"
+                            BorderBrush="{x:Null}"
+                            Click="led_Azul_Click"
+                            Cursor="Hand">
+                            <Ellipse
+                                x:Name="elip_Azul"
+                                Width="12"
+                                Height="12"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Fill="#FF808080" />
+                            <!--  Color en estado activo: #FF13D9FF  -->
+                        </Button>
+                    </hc:FlexPanel>
+                    <!--  Alarma/Buzzer  -->
+                    <hc:FlexPanel Width="25" Height="25">
+                        <Button
+                            x:Name="btnApagarBuzzer"
+                            Width="25"
+                            Height="25"
+                            Padding="0,0,0,0"
+                            Background="{x:Null}"
+                            BorderBrush="{x:Null}"
+                            Click="btnApagarBuzzer_Click"
+                            Cursor="Hand">
+                            <Image
+                                Width="12"
+                                Height="12"
+                                Source="{svgc:SvgImage Source=/Resources/volume-full.svg,
+                                                       AppName=Presentation}" />
+                        </Button>
+                    </hc:FlexPanel>
+                </hc:FlexPanel>
+
+                <!--  Minimizar y cerrar  -->
+                <hc:FlexPanel
+                    Height="24"
+                    Margin="667,0,-667,1"
+                    Panel.ZIndex="200">
+                    <Button
+                        x:Name="btn_minimizar"
+                        Width="24"
+                        Height="24"
+                        Padding="0,0,0,0"
+                        Background="Transparent"
+                        BorderBrush="{x:Null}"
+                        Click="btn_minimizar_Click"
+                        Cursor="Hand">
+                        <Image Width="8" Source="{svgc:SvgImage Source=/Resources/minimize.svg}" />
+                    </Button>
+                    <Button
+                        x:Name="btn_cerrar"
+                        Width="24"
+                        Height="24"
+                        Padding="0,0,0,0"
+                        Background="Transparent"
+                        BorderBrush="{x:Null}"
+                        Click="btn_cerrar_Click"
+                        Cursor="Hand"
+                        Style="{StaticResource btn-close}">
+                        <Image Width="8" Source="{svgc:SvgImage Source=/Resources/close-x.svg}" />
+                    </Button>
+                </hc:FlexPanel>
             </hc:FlexPanel>
-            <!-- Puertos -->
-            <hc:FlexPanel Height="25" Margin="8,0,0,0">
-                <Button Background="{x:Null}" BorderBrush="{x:Null}" Height="25" Width="60" Padding="0,0,0,0" Cursor="Hand" Click="AbrirVentanaPuertos">
-                    <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="#FFEDEDED">Puertos
-                    <Image Source="{svgc:SvgImage Source=/Resources/door-exit-white.svg, AppName=Presentation}" Width="10" Height="10" Margin="0,0,0,-0.8"/>
+
+            <!--  Segunda fila  -->
+            <hc:FlexPanel
+                Grid.Row="1"
+                Width="750"
+                Height="350"
+                JustifyContent="SpaceBetween">
+                <!--  Temperatura  -->
+                <hc:FlexPanel Height="234" FlexDirection="Column">
+                    <TextBlock
+                        Height="24"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        FontFamily="{StaticResource Outfit-SemiBold}"
+                        FontSize="16"
+                        Foreground="#FFFFFFFF">
+                        Temperatura
                     </TextBlock>
-                </Button>
-            </hc:FlexPanel>
 
-            <!-- Leds y buzzer -->
-            <hc:FlexPanel Margin="316,0,-315,0">
-                <!-- Leds -->
-                <hc:FlexPanel Height="25" JustifyContent="SpaceBetween">
-                    <Button x:Name="led_Rojo" Height="25" Width="25" Background="{x:Null}" BorderBrush="{x:Null}" Padding="0,0,0,0" Cursor="Hand" Click="led_Rojo_Click">
-                        <Ellipse x:Name="elip_Rojo" Width="12" Height="12" Fill="#FFFF1349" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Button>
-                    <Button x:Name="led_Amarillo" Height="25" Width="25" Background="{x:Null}" BorderBrush="{x:Null}" Padding="0,0,0,0" Cursor="Hand" Click="led_Amarillo_Click">
-                        <Ellipse x:Name="elip_Amarillo" Width="12" Height="12" Fill="#FFFFD613" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Button>
-                    <Button  x:Name="led_Azul" Height="25" Width="25" Background="{x:Null}" BorderBrush="{x:Null}" Padding="0,0,0,0" Cursor="Hand" Click="led_Azul_Click">
-                        <Ellipse x:Name="elip_Azul" Width="12" Height="12" Fill="#FF13D9FF" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Button>
+                    <hc:CircleProgressBar
+                        x:Name="mostrar_temperatura"
+                        Width="200"
+                        Height="200"
+                        Margin="0,9,0,-9"
+                        Background="#FFDEDEDE"
+                        Text="75°C"
+                        Value="75">
+                        <hc:CircleProgressBar.Foreground>
+                            <LinearGradientBrush EndPoint="1,0">
+                                <GradientStop Offset="1" Color="#FFFFA84F" />
+                                <GradientStop Offset="0" Color="#FF7D91FF" />
+                            </LinearGradientBrush>
+                        </hc:CircleProgressBar.Foreground>
+                    </hc:CircleProgressBar>
                 </hc:FlexPanel>
-                <!-- Alarma/Buzzer -->
-                <hc:FlexPanel Height="25" Width="25">
-                    <Button x:Name="btnApagarBuzzer" Height="25" Width="25" Background="{x:Null}" BorderBrush="{x:Null}" Padding="0,0,0,0" Cursor="Hand" Click="btnApagarBuzzer_Click">
-                        <Image Source="{svgc:SvgImage Source=/Resources/volume-full.svg, AppName=Presentation}" Width="12" Height="12"></Image>
-                    </Button>
+
+                <!--  Plantita  -->
+                <hc:FlexPanel Height="234" FlexDirection="Column">
+                    <TextBlock
+                        Height="24"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        FontFamily="{StaticResource Outfit-SemiBold}"
+                        FontSize="16"
+                        Foreground="#FFFFFFFF">
+                        Tu plantita
+                    </TextBlock>
+
+                    <Image
+                        x:Name="img_planta"
+                        Width="200"
+                        Height="200"
+                        Margin="0,9,0,-9"
+                        Source="{svgc:SvgImage Source=/Resources/leaf-good.svg}" />
                 </hc:FlexPanel>
-            </hc:FlexPanel>
 
-            <!-- Minimizar y maximizar -->
-            <hc:FlexPanel Height="24" Margin="667,0,-667,1" Panel.ZIndex="200">
-                <Button x:Name="btn_minimizar" Height="24" Width="24" Background="#FF2B2B2B" BorderBrush="{x:Null}" Padding="0,0,0,0" Cursor="Hand" Click="btn_minimizar_Click">
-                    <Image Source="{svgc:SvgImage Source=/Resources/minimize.svg}" Width="8"></Image>
-                </Button>
-                <Button x:Name="btn_cerrar" Height="24" Width="24" Background="#FF2B2B2B" BorderBrush="{x:Null}" Padding="0,0,0,0" Cursor="Hand" Click="btn_cerrar_Click">
-                    <Image Source="{svgc:SvgImage Source=/Resources/close-x.svg}" Width="8" ></Image>
-                </Button>
-            </hc:FlexPanel>
-        </hc:FlexPanel>
+                <!--  Humedad  -->
+                <hc:FlexPanel
+                    Width="200"
+                    Margin="0,58,0,18"
+                    FlexDirection="Column">
+                    <TextBlock
+                        Height="24"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        FontFamily="{StaticResource Outfit-SemiBold}"
+                        FontSize="16"
+                        Foreground="#FFFFFFFF">
+                        Humedad
+                    </TextBlock>
+                    <hc:WaveProgressBar
+                        x:Name="mostrar_humedad"
+                        Width="198"
+                        Margin="1,8,1,-9"
+                        Background="Transparent"
+                        Foreground="White"
+                        Value="20" />
+                </hc:FlexPanel>
 
-        <!-- Segunda fila -->
-        <hc:FlexPanel Grid.Row="1" Width="750" Height="350" JustifyContent="SpaceBetween" >
-            <!-- Temperatura -->
-            <hc:FlexPanel  FlexDirection="Column" Height="234">
-                <TextBlock HorizontalAlignment="Center" Foreground="#FFFFFFFF" FontFamily="{StaticResource Outfit-SemiBold}" FontSize="16" Height="24" VerticalAlignment="Center">Temperatura</TextBlock>
 
-                <hc:CircleProgressBar x:Name="mostrar_temperatura" Value="75" Text="75°C" Width="200" Height="200" Background="#FFDEDEDE" Margin="0,9,0,-9">
-                    <hc:CircleProgressBar.Foreground>
-                        <LinearGradientBrush EndPoint="1,0">
-                            <GradientStop Color="#FFFFA84F" Offset="1"/>
-                            <GradientStop Color="#FF7D91FF" Offset="0"/>
-                        </LinearGradientBrush>
-                    </hc:CircleProgressBar.Foreground>
-                </hc:CircleProgressBar>
-            </hc:FlexPanel>
-
-            <!-- Plantita -->
-            <hc:FlexPanel  FlexDirection="Column" Height="234">
-                <TextBlock HorizontalAlignment="Center" Foreground="#FFFFFFFF" FontFamily="{StaticResource Outfit-SemiBold}" FontSize="16" Height="24" VerticalAlignment="Center">Tu plantita</TextBlock>
-
-                <Image x:Name="img_planta" Width="200" Height="200" Margin="0,9,0,-9" Source="{svgc:SvgImage Source=/Resources/leaf-good.svg}"></Image>
-            </hc:FlexPanel>
-
-            <!-- Humedad -->
-            <hc:FlexPanel  FlexDirection="Column" Width="200" Margin="0,58,0,18">
-                <TextBlock HorizontalAlignment="Center" Foreground="#FFFFFFFF" FontFamily="{StaticResource Outfit-SemiBold}" FontSize="16" Height="24" VerticalAlignment="Center">Humedad</TextBlock>
-                <hc:WaveProgressBar x:Name="mostrar_humedad" Width="198" Value="20" Background="Transparent" Margin="1,8,1,-9" Foreground="White" >
-
-                </hc:WaveProgressBar>
             </hc:FlexPanel>
 
 
-        </hc:FlexPanel>
 
 
 
+            <!--  Tercera fila - temperatura respecto al tiempo  -->
 
+            <hc:FlexPanel
+                Grid.Row="2"
+                Width="750"
+                Margin="75,17,75,17"
+                FlexDirection="Column">
+                <TextBlock
+                    Margin="0,15,0,-5"
+                    HorizontalAlignment="Center"
+                    FontFamily="{StaticResource Outfit-SemiBold}"
+                    FontSize="16"
+                    Foreground="White"
+                    Text="Temperatura respecto al tiempo" />
 
-        <!-- Tercera fila - temperatura respecto al tiempo -->
-
-        <hc:FlexPanel Grid.Row="2" Margin="75,17,75,17" FlexDirection="Column" Width="750">
-            <TextBlock Text="Temperatura respecto al tiempo" 
-               FontSize="16" Foreground="White" 
-               HorizontalAlignment="Center" Margin="0,15,0,-5" FontFamily="{StaticResource Outfit-SemiBold}"/>
-
-            <!--
+                <!--
             <lvc:CartesianChart Margin="0,10" Height="280">
                 <lvc:CartesianChart.Series>
-                    <lvc:LineSeries Values="5,9,8,6,1,5,7,3,6,3" 
-                            Stroke="#CD2156" 
-                            StrokeThickness="2" 
+                    <lvc:LineSeries Values="5,9,8,6,1,5,7,3,6,3"
+                            Stroke="#CD2156"
+                            StrokeThickness="2"
                             Fill="Transparent"/>
                 </lvc:CartesianChart.Series>
 
@@ -152,22 +345,42 @@
                     <lvc:Axis Title="Temperatura (°C)" Foreground="#64FFFFFF" FontSize="12"/>
                 </lvc:CartesianChart.AxisY>
             </lvc:CartesianChart>
-            -->
+                -->
 
-            <lvc:CartesianChart x:Name="temperatureChart" Height="280">
-                <lvc:CartesianChart.AxisX>
-                    <lvc:Axis Title="Tiempo" Labels="{Binding TimeLabels}" Foreground="#64FFFFFF" FontSize="12"/>
-                </lvc:CartesianChart.AxisX>
-                <lvc:CartesianChart.AxisY>
-                    <lvc:Axis Title="Temperatura (°C)" Foreground="#64FFFFFF" FontSize="12"/>
-                </lvc:CartesianChart.AxisY>
-            </lvc:CartesianChart>
+                <lvc:CartesianChart x:Name="temperatureChart" Height="280">
+                    <lvc:CartesianChart.AxisX>
+                        <lvc:Axis
+                            Title="Tiempo"
+                            FontSize="12"
+                            Foreground="#64FFFFFF"
+                            Labels="{Binding TimeLabels}" />
+                    </lvc:CartesianChart.AxisX>
+                    <lvc:CartesianChart.AxisY>
+                        <lvc:Axis
+                            Title="Temperatura (°C)"
+                            FontSize="12"
+                            Foreground="#64FFFFFF" />
+                    </lvc:CartesianChart.AxisY>
+                </lvc:CartesianChart>
 
 
-            <TextBlock Text="Temperatura promedio en las 2 últimas horas " Foreground="#FFDEDEDE" FontSize="14" Margin="0,21,0,-17" HorizontalAlignment="Center"/>
-            <TextBlock Text="20.45 °C" Foreground="White" FontSize="24" FontWeight="Bold" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,22,0,0"/>
-        </hc:FlexPanel>
+                <TextBlock
+                    Margin="0,21,0,-17"
+                    HorizontalAlignment="Center"
+                    FontSize="14"
+                    Foreground="#FFDEDEDE"
+                    Text="Temperatura promedio en las 2 últimas horas " />
+                <TextBlock
+                    Margin="0,22,0,0"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Top"
+                    FontSize="24"
+                    FontWeight="Bold"
+                    Foreground="White"
+                    Text="20.45 °C" />
+            </hc:FlexPanel>
 
 
-    </Grid>
+        </Grid>
+    </Border>
 </Window>

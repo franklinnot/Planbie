@@ -8,11 +8,11 @@ using System.Threading.Tasks;
 
 namespace Presentation.Logica
 {
-    public class ArduinoInteraction
+    public class Arduino
     {
         private SerialPort _serialPort;
 
-        public ArduinoInteraction(SerialPort serialPort)
+        public Arduino(SerialPort serialPort)
         {
             _serialPort = serialPort;
         }

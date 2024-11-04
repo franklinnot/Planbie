@@ -23,19 +23,23 @@ namespace Presentation
 {
     public partial class MainWindow : Window
     {
-        private ChartValues<double> temperatureValues;
+        private ChartValues<double> temperatureValues = new ChartValues<double>();
         private const string archivoJson = "temperatures.json";
-        private ArduinoInteraction arduinoInteraction;
+        private Arduino arduino;
         private CancellationTokenSource cts;
         private int dataCounter = 0;
 
         public MainWindow()
         {
             InitializeComponent();
-            elip_Azul.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF808080"));
-            elip_Amarillo.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF808080"));
-            elip_Rojo.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF808080"));
-            temperatureValues = new ChartValues<double>();
+
+            CargarDatosJson(); // codigo para cargar y configurar el grafico de temperatura respecto al tiempo
+
+        }
+
+        #region cargar los registros de temperaturas el grafico temp/tiempo y configurarlo
+        private void CargarDatosJson()
+        {
 
             temperatureChart.Series = new SeriesCollection
             {
@@ -54,18 +58,25 @@ namespace Presentation
                 });
             }
 
-            CargarDatosIniciales();
-        }
-
-        private void CargarDatosIniciales()
-        {
-            foreach (TempData data in LeerDatos())
+            foreach (TempData data in LeerDatosJson())
             {
-                AddTemperatureReading(data);
+                AgregarTemperaturaGrafico(data);
             }
         }
 
-        public static List<TempData> LeerDatos()
+        public void AgregarTemperaturaGrafico(TempData data)
+        {
+            temperatureValues.Add(data.Temperatura);
+
+            var labels = temperatureChart.AxisX[0].Labels as List<string> ?? new List<string>();
+            labels.Add(data.Fecha.ToString("HH:mm:ss"));
+            temperatureChart.AxisX[0].Labels = labels;
+        }
+        #endregion
+
+        #region metodos paraa leer, y agregar nuevos registros al json
+        // devuelve una lista de temperaturas a partir del json
+        public static List<TempData> LeerDatosJson()
         {
             if (!File.Exists(archivoJson))
             {
@@ -76,35 +87,30 @@ namespace Presentation
             return JsonConvert.DeserializeObject<List<TempData>>(json);
         }
 
-        public static void AgregarRegistro(TempData nuevoRegistro)
+        // registra una nuevo objeto de Temperatura en el Json
+        public async Task AgregarRegistroJson(TempData nuevoRegistro)
         {
-            List<TempData> registros = LeerDatos();
+            List<TempData> registros = LeerDatosJson();
             registros.Add(nuevoRegistro);
-            GuardarDatos(registros);
 
             Debug.WriteLine(JsonConvert.SerializeObject(registros, Formatting.Indented));
-        }
 
-        public static void GuardarDatos(List<TempData> registros)
-        {
+            // guardar la lista de temperaturas en el json
             string json = JsonConvert.SerializeObject(registros, Formatting.Indented);
             File.WriteAllText(archivoJson, json);
-        }
 
-        public void AddTemperatureReading(TempData data)
-        {
-            temperatureValues.Add(data.Temperatura);
-
-            var labels = temperatureChart.AxisX[0].Labels as List<string> ?? new List<string>();
-            labels.Add(data.Fecha.ToString("HH:mm:ss"));
-            temperatureChart.AxisX[0].Labels = labels;
+            AgregarTemperaturaGrafico(nuevoRegistro);
         }
+        #endregion
+
+
+
 
         private async void StartDataCollection()
         {
             if (EmergenteWindow.puertoSerial != null && EmergenteWindow.puertoSerial.IsOpen)
             {
-                arduinoInteraction = new ArduinoInteraction(EmergenteWindow.puertoSerial);
+                arduino = new Arduino(EmergenteWindow.puertoSerial);
                 cts = new CancellationTokenSource();
 
                 await Task.Run(async () =>
@@ -113,7 +119,7 @@ namespace Presentation
                     {
                         try
                         {
-                            JObject data = await arduinoInteraction.CollectData();
+                            JObject data = await arduino.CollectData();
                             Dispatcher.Invoke(() => OnDataReceived(data));
                             await Task.Delay(1000, cts.Token); // Espera 1 segundo antes de la próxima lectura
                         }
@@ -144,8 +150,6 @@ namespace Presentation
                 Temperatura = temperatura
             };
 
-            AddTemperatureReading(tempData);
-
             // Actualizar la UI con los últimos valores
             //txtTemperatura.Text = $"Temperatura: {temperatura}°C";
             //txtHumedad.Text = $"Humedad: {data["humedad"]}%";
@@ -155,13 +159,13 @@ namespace Presentation
             if (data["boton"].ToString() == "REGANDO")
             {
                 Debug.WriteLine("REGANDO -- boton");
-                await arduinoInteraction.Regando(1);
+                await arduino.Regando(1);
                 elip_Azul.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF13D9FF"));
             }
             else
             {
                 Debug.WriteLine("NO REGANDO -- boton");
-                await arduinoInteraction.Regando(0);
+                await arduino.Regando(0);
                 elip_Azul.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF808080"));
             }
 
@@ -174,7 +178,9 @@ namespace Presentation
             dataCounter++;
             if (dataCounter % 3 == 0)
             {
-                Task.Run(() => AgregarRegistro(tempData));
+                await Dispatcher.InvokeAsync(() => {
+                    AgregarRegistroJson(tempData);
+                });
             }
             // Controla si la alerta de temperatura/humedad está activa
             // Controla si la alerta de distancia está activa
@@ -183,8 +189,8 @@ namespace Presentation
             if (humedad < 30 && temperatura > 35 )
             {
                 // Si no está alertando la distancia, se ejecuta la alerta de temperatura/humedad
-                await arduinoInteraction.Alert_Temp();
-                //await arduinoInteraction.Regando();
+                await arduino.Alert_Temp();
+                //await arduino.Regando();
                 elip_Amarillo.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFD613"));
                 //string newSvgPath = "/Resources/leaf-bad.svg";
                 //img_planta.SetValue(SvgImage.SourceProperty, new Uri(newSvgPath, UriKind.Relative));
@@ -198,17 +204,17 @@ namespace Presentation
 
         private async void btnApagarLED_Click(object sender, RoutedEventArgs e)
         {
-            if (arduinoInteraction != null)
+            if (arduino != null)
             {
-                await arduinoInteraction.TurnOffLED();
+                await arduino.TurnOffLED();
             }
         }
 
         private async void btnApagarBuzzer_Click(object sender, RoutedEventArgs e)
         {
-            if (arduinoInteraction != null)
+            if (arduino != null)
             {
-                await arduinoInteraction.TurnOffBuzzer();
+                await arduino.TurnOffBuzzer();
                 MessageBox.Show("Apagué tu feo Bauser");
             }
         }
@@ -251,8 +257,7 @@ namespace Presentation
                 Temperatura = temperatura
             };
 
-            AgregarRegistro(nuevoRegistro);
-            AddTemperatureReading(nuevoRegistro);
+            AgregarRegistroJson(nuevoRegistro);
         }
 
         private void btn_add_Click(object sender, RoutedEventArgs e)
