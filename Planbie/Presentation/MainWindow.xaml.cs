@@ -1,31 +1,20 @@
-﻿using LiveCharts.Defaults;
-using LiveCharts;
-using System;
-using System.Windows;
-using System.Windows.Input;
+﻿using LiveCharts;
 using LiveCharts.Wpf;
 using Newtonsoft.Json.Linq;
-using Newtonsoft.Json;
-using System.Collections.Generic;
-using System.IO;
-using System.Diagnostics;
-using System.IO.Ports;
-using System.Threading.Tasks;
-using System.Threading;
-using System.Diagnostics.Tracing;
-using System.Windows.Media;
-using SharpVectors.Converters;
-using SharpVectors.Renderers.Wpf;
-using SharpVectors.Renderers;
-using System;
 using Presentation.Logica;
+using System.Diagnostics;
+using System.Windows;
+using System.Windows.Input;
+using System.Windows.Media;
 namespace Presentation
 {
     public partial class MainWindow : Window
     {
         private ChartValues<double> temperatureValues = new ChartValues<double>();
-        private const string archivoJson = "temperatures.json";
+        
         private Arduino arduino;
+        private Json json = new Json();
+        
         private CancellationTokenSource cts;
         private int dataCounter = 0;
 
@@ -37,7 +26,7 @@ namespace Presentation
 
         }
 
-        #region cargar los registros de temperaturas el grafico temp/tiempo y configurarlo
+        #region cargar los registros de temperaturas del json en el grafico temp/tiempo y configurarlo
         private void CargarDatosJson()
         {
 
@@ -58,7 +47,7 @@ namespace Presentation
                 });
             }
 
-            foreach (TempData data in LeerDatosJson())
+            foreach (TempData data in Json.LeerDatosJson())
             {
                 AgregarTemperaturaGrafico(data);
             }
@@ -73,37 +62,6 @@ namespace Presentation
             temperatureChart.AxisX[0].Labels = labels;
         }
         #endregion
-
-        #region metodos paraa leer, y agregar nuevos registros al json
-        // devuelve una lista de temperaturas a partir del json
-        public static List<TempData> LeerDatosJson()
-        {
-            if (!File.Exists(archivoJson))
-            {
-                return new List<TempData>();
-            }
-
-            string json = File.ReadAllText(archivoJson);
-            return JsonConvert.DeserializeObject<List<TempData>>(json);
-        }
-
-        // registra una nuevo objeto de Temperatura en el Json
-        public async Task AgregarRegistroJson(TempData nuevoRegistro)
-        {
-            List<TempData> registros = LeerDatosJson();
-            registros.Add(nuevoRegistro);
-
-            Debug.WriteLine(JsonConvert.SerializeObject(registros, Formatting.Indented));
-
-            // guardar la lista de temperaturas en el json
-            string json = JsonConvert.SerializeObject(registros, Formatting.Indented);
-            File.WriteAllText(archivoJson, json);
-
-            AgregarTemperaturaGrafico(nuevoRegistro);
-        }
-        #endregion
-
-
 
 
         private async void StartDataCollection()
@@ -178,9 +136,10 @@ namespace Presentation
             dataCounter++;
             if (dataCounter % 3 == 0)
             {
-                await Dispatcher.InvokeAsync(() => {
-                    AgregarRegistroJson(tempData);
+                await Dispatcher.InvokeAsync(async () => {
+                    await Json.AgregarRegistroJson(tempData);
                 });
+                AgregarTemperaturaGrafico(tempData);
             }
             // Controla si la alerta de temperatura/humedad está activa
             // Controla si la alerta de distancia está activa
@@ -249,7 +208,7 @@ namespace Presentation
             }
         }
 
-        private void registrar_temperatura(double temperatura)
+        private async Task registrar_temperatura(double temperatura)
         {
             var nuevoRegistro = new TempData
             {
@@ -257,7 +216,11 @@ namespace Presentation
                 Temperatura = temperatura
             };
 
-            AgregarRegistroJson(nuevoRegistro);
+            await Dispatcher.InvokeAsync(async () => {
+                await Json.AgregarRegistroJson(nuevoRegistro);
+            });
+
+            AgregarTemperaturaGrafico(nuevoRegistro);
         }
 
         private void btn_add_Click(object sender, RoutedEventArgs e)
