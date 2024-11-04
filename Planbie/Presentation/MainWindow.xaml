@@ -93,12 +93,13 @@
                 <!--  Puertos  -->
                 <hc:FlexPanel Height="25" Margin="8,0,0,0">
                     <Button
+                        x:Name="btn_openWindowsPorts"
                         Width="60"
                         Height="25"
                         Padding="0,0,0,0"
                         Background="{x:Null}"
                         BorderBrush="{x:Null}"
-                        Click="AbrirVentanaPuertos"
+                        Click="btn_openWindowsPorts_Click"
                         Cursor="Hand">
                         <TextBlock
                             HorizontalAlignment="Center"
@@ -126,7 +127,6 @@
                             Padding="0,0,0,0"
                             Background="{x:Null}"
                             BorderBrush="{x:Null}"
-                            Click="led_Rojo_Click"
                             Cursor="Hand">
                             <Ellipse
                                 x:Name="elip_Rojo"
@@ -144,7 +144,6 @@
                             Padding="0,0,0,0"
                             Background="{x:Null}"
                             BorderBrush="{x:Null}"
-                            Click="led_Amarillo_Click"
                             Cursor="Hand">
                             <Ellipse
                                 x:Name="elip_Amarillo"
@@ -162,7 +161,6 @@
                             Padding="0,0,0,0"
                             Background="{x:Null}"
                             BorderBrush="{x:Null}"
-                            Click="led_Azul_Click"
                             Cursor="Hand">
                             <Ellipse
                                 x:Name="elip_Azul"

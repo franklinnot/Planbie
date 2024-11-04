@@ -197,17 +197,6 @@ namespace Presentation
             }
         }
 
-        private void AbrirVentanaPuertos(object sender, RoutedEventArgs e)
-        {
-            EmergenteWindow puertosWindow = new EmergenteWindow();
-            puertosWindow.ShowDialog();
-
-            if (EmergenteWindow.puertoSerial != null && EmergenteWindow.puertoSerial.IsOpen)
-            {
-                StartDataCollection();
-            }
-        }
-
         private async Task registrar_temperatura(double temperatura)
         {
             var nuevoRegistro = new TempData
@@ -229,20 +218,18 @@ namespace Presentation
             registrar_temperatura(random.Next(-5, 37));
         }
 
-        private void led_Rojo_Click(object sender, RoutedEventArgs e)
+        private void btn_openWindowsPorts_Click(object sender, RoutedEventArgs e)
         {
+            EmergenteWindow puertosWindow = new EmergenteWindow();
+            puertosWindow.ShowDialog();
 
+            if (EmergenteWindow.puertoSerial != null && EmergenteWindow.puertoSerial.IsOpen)
+            {
+                StartDataCollection();
+            }
         }
 
-        private void led_Amarillo_Click(object sender, RoutedEventArgs e)
-        {
 
-        }
 
-        private void led_Azul_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
     }
-
 }
