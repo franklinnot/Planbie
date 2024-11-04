@@ -35,7 +35,9 @@ namespace Presentation.Logica
         {
             if (!File.Exists(ArchivoJson))
             {
-                return new List<TempData>();
+                var listaVacia = new List<TempData>();
+                File.WriteAllText(ArchivoJson, JsonConvert.SerializeObject(listaVacia, Formatting.Indented));
+                return listaVacia;
             }
 
             string json = File.ReadAllText(ArchivoJson);
