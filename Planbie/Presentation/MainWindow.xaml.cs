@@ -18,6 +18,7 @@ using SharpVectors.Converters;
 using SharpVectors.Renderers.Wpf;
 using SharpVectors.Renderers;
 using System;
+using Presentation.Logica;
 namespace Presentation
 {
     public partial class MainWindow : Window

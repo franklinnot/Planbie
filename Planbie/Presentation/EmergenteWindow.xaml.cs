@@ -1,82 +1,117 @@
-﻿using System;
+﻿using HandyControl.Tools.Converter;
+using System;
+using System.Diagnostics;
+using System.Drawing;
 using System.IO.Ports;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
 
 namespace Presentation
 {
     public partial class EmergenteWindow : Window
     {
-        public static SerialPort puertoSerial;
-        public static string puertito = "";
+        public static SerialPort? puertoSerial;
+        public static string? puerto;
+        private string[] puertosAnteriores = { "Carga de puertos" };
+        private System.Timers.Timer? puertoTimer;
+
         public EmergenteWindow()
         {
             InitializeComponent();
-            CargarPuertosDisponibles();  // Cargar puertos al iniciar
+            ActualizarPuertos(); 
+            puertoSerial = new SerialPort();
+            puerto = string.Empty;
         }
 
-        // Método para cargar los puertos disponibles en el ComboBox
-        private void CargarPuertosDisponibles()
+        #region Cargar los puertos disponibles en el ComboBox
+
+        private void ActualizarPuertos()
         {
-            string[] puertos = SerialPort.GetPortNames(); // Obtener los nombres de los puertos disponibles
-
-            if (puertos.Length > 0)  // Si hay puertos disponibles
-            {
-                cmbPuertos.ItemsSource = puertos;   // Cargar los puertos en el ComboBox
-                cmbPuertos.SelectedIndex = 0;       // Seleccionar el primer puerto por defecto
-                btnAbrirPuerto.IsEnabled = true;    // Habilitar el botón para abrir/cerrar
-            }
-            else  // Si no hay puertos disponibles
-            {
-                cmbPuertos.ItemsSource = new string[] { "No hay puertos disponibles" };  // Mostrar mensaje en el ComboBox
-                cmbPuertos.SelectedIndex = 0;
-                 
-                btnAbrirPuerto.IsEnabled = false;    // Deshabilitar el botón
-            }
+            puertoTimer = new System.Timers.Timer(300);
+            puertoTimer.Elapsed += async (sender, e) => await PuertosDisponibles();
+            puertoTimer.Start();
         }
 
-        // Evento para recargar puertos disponibles al hacer clic en el ComboBox
-        private void cmbPuertos_DropDownOpened(object sender, EventArgs e)
+        // metodo para cargar los puertos
+        private async Task PuertosDisponibles()
         {
-            CargarPuertosDisponibles();  // Recargar los puertos cuando se abre el ComboBox
+            string[] puertosActuales = SerialPort.GetPortNames();
+
+            // compara si hay un cambio en la lista de puertos
+            if (!puertosActuales.SequenceEqual(puertosAnteriores))
+            {
+                puertosAnteriores = puertosActuales;
+
+                // actualizar el ComboBox en el hilo de la interfaz
+                await Dispatcher.InvokeAsync(() =>
+                {
+                    if (puertosActuales.Length > 0)
+                    {
+                        Debug.WriteLine("Se cargaron nuevos puertos");
+                        cmbPuertos.ItemsSource = puertosActuales;
+                        btnAbrirPuerto.IsEnabled = true;
+                    }
+                    else
+                    {
+                        Debug.WriteLine("No se han encontrado puertos disponibles");
+                        cmbPuertos.ItemsSource = new string[] { "No hay puertos disponibles" };
+                        btnAbrirPuerto.IsEnabled = false;
+                    }
+
+                    cmbPuertos.SelectedIndex = 0;
+                });
+            }
+
         }
+
+        // recargar puertos disponibles al hacer clic en el ComboBox
+
+        #endregion
+
 
         // Método para abrir/cerrar el puerto serial al hacer clic en el botón
         private void AbrirPuerto_Click(object sender, RoutedEventArgs e)
         {
-            // Si el puerto ya está abierto, cerrarlo
+            // si el puerto ya esta abierto, cerrarlo
             if (puertoSerial != null && puertoSerial.IsOpen)
             {
                 try
                 {
+                    // lo cerramos
                     puertoSerial.Close();
                     MessageBox.Show("Puerto cerrado con éxito.");
 
-                    // Rehabilitar el ComboBox y cambiar el texto del botón
+                    // habilitmos el comboBox y cambiamos el texto del boton
                     cmbPuertos.IsEnabled = true;
-                    btnAbrirPuerto.Content = "Abrir Conexión";
-                    CargarPuertosDisponibles();  // Recargar puertos disponibles
+                    btn_portText.Text = "Abrir puerto";
+                    btnAbrirPuerto.Background = (Brush)new BrushConverter().ConvertFrom("#FF660CA7");
                 }
                 catch (Exception ex)
                 {
                     MessageBox.Show($"Error al cerrar el puerto: {ex.Message}");
                 }
             }
+            // si no ha sido abierto ningun puerto, abrimos uno
             else
             {
-                string puertoSeleccionado = cmbPuertos.SelectedItem as string;
+                string? puertoSeleccionado = cmbPuertos.SelectedItem.ToString();
 
-                if (!string.IsNullOrEmpty(puertoSeleccionado) && puertoSeleccionado != "No hay puertos disponibles")
+                if (!string.IsNullOrEmpty(puertoSeleccionado))
                 {
                     try
                     {
-                        // Inicializar el puerto serial y abrirlo
+                        // inicializar el puerto serial y abrirlo
                         puertoSerial = new SerialPort(puertoSeleccionado);
                         puertoSerial.Open();
-                        puertito = puertoSeleccionado;
+                        puerto = puertoSeleccionado; // variable que almacena el puerto
+
                         MessageBox.Show($"Puerto {puertoSeleccionado} abierto con éxito.");
+
                         // Deshabilitar el ComboBox y cambiar el texto del botón
                         cmbPuertos.IsEnabled = false;
-                        btnAbrirPuerto.Content = "Cerrar Conexión";
+                        btn_portText.Text = "Cerrar puerto";
+                        btnAbrirPuerto.Background = (Brush)new BrushConverter().ConvertFrom("#FFD62935");
                     }
                     catch (Exception ex)
                     {
@@ -90,10 +125,62 @@ namespace Presentation
             }
         }
 
-        // Método para cerrar la ventana
+        #region Cerrar cerrar la ventana
         private void btn_cerrar_Click(object sender, RoutedEventArgs e)
         {
             this.Close();
         }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            puertoTimer?.Stop();
+            puertoTimer?.Dispose();
+            base.OnClosed(e);
+        }
+        #endregion
+
+        private void btnAbrirPuerto_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+            hoverBotonPort("enter");
+        }
+
+        private void btnAbrirPuerto_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+            hoverBotonPort("leave");
+        }
+
+        private void hoverBotonPort(string accion)
+        {
+            if (btn_portText.Text == "Cerrar puerto") {
+                if (accion == "enter")
+                {
+                    btnAbrirPuerto.Background = (Brush)new BrushConverter().ConvertFrom("#FFe63946");
+                } 
+                else if (accion == "leave") {
+                    btnAbrirPuerto.Background = (Brush)new BrushConverter().ConvertFrom("#FFD62935");
+                }
+            }
+            else if (btn_portText.Text == "Abrir puerto")
+            {
+                if (accion == "enter")
+                {
+                    btnAbrirPuerto.Background = (Brush)new BrushConverter().ConvertFrom("#FF740DBF");
+                }
+                else if (accion == "leave")
+                {
+                    btnAbrirPuerto.Background = (Brush)new BrushConverter().ConvertFrom("#FF660CA7");
+                }
+            }
+        }
+
+
+
+
+
+
+
+
+
+
     }
 }

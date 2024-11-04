@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Presentation
+namespace Presentation.Logica
 {
     public class ArduinoInteraction
     {
@@ -50,7 +50,7 @@ namespace Presentation
         public async Task TurnOffBuzzer()
         {
             await SendCommandSR("APAGAR_BUZZER");
-            
+
         }
         public async Task Alert_Temp()
         {

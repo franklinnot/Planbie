@@ -1,52 +1,138 @@
-﻿<Window x:Class="Presentation.EmergenteWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        
-        xmlns:svgc="http://sharpvectors.codeplex.com/svgc/"
-        xmlns:sys="clr-namespace:System;assembly=mscorlib"
-        
-        xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
-        
-        xmlns:local="clr-namespace:Presentation"
-        
-        
-        mc:Ignorable="d"
-        Title="EmergenteWindow" Height="125" Width="400" WindowStyle="None" ResizeMode="NoResize" Topmost="True" WindowStartupLocation="CenterScreen">
+﻿<Window
+    x:Class="Presentation.EmergenteWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:Presentation"
+    xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:svgc="http://sharpvectors.codeplex.com/svgc/"
+    xmlns:sys="clr-namespace:System;assembly=mscorlib"
+    Title="EmergenteWindow"
+    Width="400"
+    Height="125"
+    AllowsTransparency="True"
+    Background="Transparent"
+    ResizeMode="NoResize"
+    Topmost="True"
+    WindowStartupLocation="CenterScreen"
+    WindowStyle="None"
+    mc:Ignorable="d">
 
     <Window.Resources>
         <FontFamily x:Key="Outfit">/Presentation;component/Resources/#Outfit Regular</FontFamily>
         <FontFamily x:Key="Outfit-SemiBold">/Presentation;component/Resources/#Outfit SemiBold</FontFamily>
 
+
+        <Style x:Key="btn-close" TargetType="Button">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border
+                            x:Name="border"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="0"
+                            CornerRadius="0, 8, 0, 0">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <!--  Efecto hover  -->
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="LightBlue" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <!--  Fondo por defecto  -->
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+
+        <Style x:Key="btn-port" TargetType="Button">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border
+                            x:Name="border"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="0"
+                            CornerRadius="4.8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <!--  Efecto hover
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#FF740DBF" />
+                            </Trigger>
+                            -->
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <!--  Fondo por defecto  -->
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+
     </Window.Resources>
 
-    <Grid Background="#FF2B2B2B">
+    <Border
+        Background="#FF2B2B2B"
+        BorderBrush="#FF4B4B4B"
+        BorderThickness="0.8,0.8,0.8,0.8"
+        CornerRadius="8,8,8,8">
+        <Grid Background="Transparent">
 
+            <Button
+                x:Name="btn_cerrar"
+                Width="24"
+                Height="24"
+                Margin="375,-1,-1,100"
+                Padding="0"
+                BorderBrush="{x:Null}"
+                Click="btn_cerrar_Click"
+                Style="{StaticResource btn-close}">
+                <Image Width="8" Source="{svgc:SvgImage Source=/Resources/close-x.svg}" />
+            </Button>
 
-        <Button x:Name="btn_cerrar" Height="24" Width="24" Background="#FF2B2B2B" BorderBrush="{x:Null}" Padding="0,0,0,0" Cursor="Hand" Click="btn_cerrar_Click" Margin="326,0,0,101">
-            <Image Source="{svgc:SvgImage Source=/Resources/close-x.svg}" Width="8" ></Image>
-        </Button>
+            <!--  Etiqueta para el ComboBox  -->
+            <TextBlock
+                Margin="54,32,0,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Foreground="White">
+                Seleccionar Puerto:
+            </TextBlock>
 
-        <!-- Etiqueta para el ComboBox -->
-        <TextBlock Margin="54,39,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Foreground="White">Seleccionar Puerto:</TextBlock>
+            <!--  ComboBox - seleccionar puerto  -->
+            <ComboBox
+                x:Name="cmbPuertos"
+                Width="200"
+                Height="30"
+                Margin="54,52,0,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Background="#FFEDEDED"
+                BorderBrush="{x:Null}"
+                BorderThickness="0,0,0,0" />
 
-        <!-- ComboBox - seleccionar puerto -->
-        <ComboBox x:Name="cmbPuertos" Width="200" Height="30" HorizontalAlignment="Left" Margin="54,59,0,0" VerticalAlignment="Top" Background="#FFEDEDED" BorderBrush="{x:Null}" DropDownOpened="cmbPuertos_DropDownOpened">
+            <!--  Abrir puerto  -->
+            <Button
+                x:Name="btnAbrirPuerto"
+                Width="80"
+                Height="30"
+                Margin="259,52,59,41"
+                Background="#FF660CA7"
+                BorderBrush="{x:Null}"
+                BorderThickness="0,0,0,0"
+                Click="AbrirPuerto_Click"
+                MouseEnter="btnAbrirPuerto_MouseEnter"
+                MouseLeave="btnAbrirPuerto_MouseLeave"
+                Style="{StaticResource btn-port}">
+                <TextBlock x:Name="btn_portText" Foreground="White">Abrir puerto</TextBlock>
+            </Button>
 
-        </ComboBox>
-
-        <!-- ABRRRRIR Puerto :,D -->
-        <Button x:Name="btnAbrirPuerto" Click="AbrirPuerto_Click" BorderBrush="{x:Null}" BorderThickness="0,0,0,0" Height="30" Margin="259,59,61,36" Width="80">
-            <TextBlock Foreground="White" >Abrir puerto</TextBlock>
-            <Button.Template>
-                <ControlTemplate TargetType="Button">
-                    <Border CornerRadius="8" Background="#FF660CA7">
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                </ControlTemplate>
-            </Button.Template>
-        </Button>
-
-    </Grid>
+        </Grid>
+    </Border>
 </Window>
