@@ -32,6 +32,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\MQTT\MQTT.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Resource Include="Resources\close-x.svg" />
     <Resource Include="Resources\door-exit-white.svg" />
     <Resource Include="Resources\leaf-bad.svg" />
