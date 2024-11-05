@@ -13,6 +13,6 @@ namespace Presentation.Logica
     public class TempData
     {
         public DateTime Fecha { get; set; }
-        public double Temperatura { get; set; }
+        public int Temperatura { get; set; }
     }
 }

@@ -10,26 +10,24 @@ namespace Presentation
 {
     public partial class MainWindow : Window
     {
-        private ChartValues<double> temperatureValues = new ChartValues<double>();
-        
-        private Arduino arduino;
+        private ChartValues<int> temperatureValues = new ChartValues<int>();
+        private Arduino? arduino;
         private Json json = new Json();
-        
-        private CancellationTokenSource cts;
-        private int dataCounter = 0;
+        // util para cuando se quiera cancelar la tarea de recoleccion de datos o envio de comandos (metodo RecolectarDatos_Arduino)
+        // public static por si en la ventana de ports cierra la conexion del puerto -- linea 90 en la ventana emergente y dentro btn_cerrar_Click en este doc
+        public static CancellationTokenSource? cts; 
 
         public MainWindow()
         {
             InitializeComponent();
-
-            CargarDatosJson(); // codigo para cargar y configurar el grafico de temperatura respecto al tiempo
-
+            
+            CargaInicialDatosJson(); // codigo para cargar y configurar el grafico de temperatura respecto al tiempo
         }
 
         #region cargar los registros de temperaturas del json en el grafico temp/tiempo y configurarlo
-        private void CargarDatosJson()
+        private async void CargaInicialDatosJson()
         {
-
+            // Configuracion inicial del grafico
             temperatureChart.Series = new SeriesCollection
             {
                 new LineSeries
@@ -47,7 +45,9 @@ namespace Presentation
                 });
             }
 
-            foreach (TempData data in Json.LeerDatosJson())
+            List<TempData> registros = await Json.LeerDatosJson();
+            // cargar los valores iniciales del grafico
+            foreach (TempData data in registros)
             {
                 AgregarTemperaturaGrafico(data);
             }
@@ -55,31 +55,38 @@ namespace Presentation
 
         public void AgregarTemperaturaGrafico(TempData data)
         {
-            temperatureValues.Add(data.Temperatura);
+            int temp = data.Temperatura;
+            temperatureValues.Add(temp);
 
             var labels = temperatureChart.AxisX[0].Labels as List<string> ?? new List<string>();
-            labels.Add(data.Fecha.ToString("HH:mm:ss"));
+            labels.Add(data.Fecha.ToString("g"));
             temperatureChart.AxisX[0].Labels = labels;
         }
+
         #endregion
 
+        #region codigo para recolectar los datos segun su tipo de conexion
 
-        private async void StartDataCollection()
+        // si se trabaja con conexion directa, se usara este metodo -- 2
+        private async Task RecolectarDatos_Arduino()
         {
             if (EmergenteWindow.puertoSerial != null && EmergenteWindow.puertoSerial.IsOpen)
             {
-                arduino = new Arduino(EmergenteWindow.puertoSerial);
-                cts = new CancellationTokenSource();
+                bool error_recopilacion = false;
+                arduino = new Arduino(EmergenteWindow.puertoSerial); // instancia de la clase arduino solo si el puerto serial a sido abierto
+                cts = new CancellationTokenSource(); // se inicializa el cts para recibir solicitudes de cancelacion
 
+                // esto realiza una ejecucion en paralelo
                 await Task.Run(async () =>
                 {
+                    // mientras no se haya solicitado la cancelación de la tarea
                     while (!cts.Token.IsCancellationRequested)
                     {
                         try
                         {
-                            JObject data = await arduino.CollectData();
-                            Dispatcher.Invoke(() => OnDataReceived(data));
-                            await Task.Delay(1000, cts.Token); // Espera 1 segundo antes de la próxima lectura
+                            JObject data = await arduino.ObtenerDatos(); // json de los datos recibidos del ardu
+                            Dispatcher.Invoke(() => ProcesarData(data)); // utiliza el dispatcher para actualizar la intefaz y no bloquear su hilo de ejcucion
+                            await Task.Delay(5000, cts.Token); // se realizara la espera de 5 segundos y por el while volvera a ejecutarse
                         }
                         catch (OperationCanceledException)
                         {
@@ -87,10 +94,18 @@ namespace Presentation
                         }
                         catch (Exception ex)
                         {
-                            Debug.WriteLine($"Error collecting data: {ex.Message}");
+                            error_recopilacion = true;
+                            MessageBox.Show("Hubo un error en la recopilación de datos");
+                            Debug.WriteLine($"Error en la recopilación de datos: {ex.Message}");
+                            cts?.Cancel();
                         }
                     }
-                }, cts.Token);
+                }, cts.Token); // se pasa el token de cancelación a Task.Run 
+
+                if (!error_recopilacion) {
+                    // cuando la tarea de recoleccion de datos termine
+                    MessageBox.Show("La recolección de datos del Arduino ha culminado.");                
+                }
             }
             else
             {
@@ -98,95 +113,177 @@ namespace Presentation
             }
         }
 
-        private async void OnDataReceived(JObject data)
+        #endregion
+
+        #region Codigo para procesar la data recibida, registrar en el json, actualizar la interfaz y enviar comandos segun el tipo de conexion
+
+        // metodo util para procesar la data recibida, sin importar el tipo de conexion
+        private async void ProcesarData(JObject data)
         {
-            int temperatura = data["temperatura"].Value<int>();
-
-            var tempData = new TempData
+            try
             {
-                Fecha = DateTime.Now,
-                Temperatura = temperatura
-            };
+                int temperatura = data["temperatura"].Value<int>();
+                int humedad = data["humedad"].Value<int>();
+                string estado_boton = data["boton"].ToString();
+                // variable temporal para almacenar los datos  de la temperatura
+                var dataTemporal = new TempData
+                {
+                    Fecha = DateTime.Now,
+                    Temperatura = temperatura
+                };
 
-            // Actualizar la UI con los últimos valores
-            //txtTemperatura.Text = $"Temperatura: {temperatura}°C";
-            //txtHumedad.Text = $"Humedad: {data["humedad"]}%";
-            //double distance = double.Parse(data["distancia"].ToString());
-            //txtBoton.Text = $"Estado del botón: {(data["boton"].Value<int>() == 1 ? "Presionado" : "No presionado")}";
+                // metodos asincronos por el hecho de tener que recibir datos desde un dispositivo externo
+                // y tambien por modificar el archivo json
+                await RegistrarTemperaturaJson(dataTemporal);
+                await NotificarAlertas(temperatura, humedad, estado_boton);
 
-            if (data["boton"].ToString() == "REGANDO")
+                ActualizarInterfaz(dataTemporal, humedad);
+            }
+            catch (Exception e)
             {
-                Debug.WriteLine("REGANDO -- boton");
-                await arduino.Regando(1);
-                elip_Azul.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF13D9FF"));
+                MessageBox.Show($"Ha sucedido un error al procesar los datos: {e.Message}");
+            }
+        }
+
+        // metodo para registrar la temperatura para el json usando instancia de esa clase
+        private async Task RegistrarTemperaturaJson(TempData nuevoRegistro)
+        {
+            await Dispatcher.InvokeAsync(async () => {
+                await Json.RegistrarTemperaturaJson(nuevoRegistro);
+            });
+        }
+
+        // metodo para evaluar los datos recibidos y tomar decisiones en basea a sus valores
+        private async Task NotificarAlertas(int temperatura, int humedad, string estado_boton)
+        {
+            // agregar codigo para verificar con que tipo de conexion se desea trabajar
+
+            /*
+            color verde: #FF00ff77
+            color rojo: #FFFF1349
+            color amarillo: #FFFFD613
+            */
+
+            // led de temperatura
+            if (temperatura >= 40)
+            {
+                elip_temperatura.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFF1349"));
+            }
+            else if (temperatura >= 30 && temperatura < 40)
+            {
+                elip_temperatura.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFD613"));
             }
             else
             {
-                Debug.WriteLine("NO REGANDO -- boton");
-                await arduino.Regando(0);
-                elip_Azul.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF808080"));
+                elip_temperatura.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF00ff77"));
             }
 
-
-            double humedad = double.Parse((data["humedad"]).ToString());
-            mostrar_humedad.Value = humedad;
-            mostrar_temperatura.Value = temperatura;
-            mostrar_temperatura.Text = $"{temperatura.ToString()}°C";
-            // Guardar datos cada 3 segundos
-            dataCounter++;
-            if (dataCounter % 3 == 0)
+            // led de humedad
+            if (humedad >= 70)
             {
-                await Dispatcher.InvokeAsync(async () => {
-                    await Json.AgregarRegistroJson(tempData);
-                });
-                AgregarTemperaturaGrafico(tempData);
+                elip_temperatura.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF00ff77"));
             }
-            // Controla si la alerta de temperatura/humedad está activa
-            // Controla si la alerta de distancia está activa
-            
-
-            if (humedad < 30 && temperatura > 35 )
+            else if (temperatura >= 60 && temperatura < 70)
             {
-                // Si no está alertando la distancia, se ejecuta la alerta de temperatura/humedad
-                await arduino.Alert_Temp();
-                //await arduino.Regando();
-                elip_Amarillo.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFD613"));
-                //string newSvgPath = "/Resources/leaf-bad.svg";
-                //img_planta.SetValue(SvgImage.SourceProperty, new Uri(newSvgPath, UriKind.Relative));
-                
+                elip_temperatura.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFD613"));
             }
-            
+            else
+            {
+                elip_temperatura.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFF1349"));
+            }
 
-            
-
+            // notificamos la alerta
+            if (temperatura >= 40 && humedad < 60)
+            {
+                Debug.WriteLine("ALERTA: Alta temperatura y baja humedad.");
+                await arduino.EstadoPeligro(true);
+            }
+            else
+            {
+                await arduino.EstadoPeligro(false);
+                // solo si la alerta no ha sido enviada, se evaluara el estado del boton manual de riego
+                await EstadoBotonRiego(estado_boton);
+            }
         }
 
-        private async void btnApagarLED_Click(object sender, RoutedEventArgs e)
+        // metodo para enviarle el comando de regar utilizando la instancia de la clase arduino
+        // y cambiar de color al boton correspondiente si se presiona el push button
+        // solo se activara si no hay una alerta ejecutandose
+        private async Task EstadoBotonRiego (string botonEstado)
         {
-            if (arduino != null)
-            {
-                await arduino.TurnOffLED();
+            if (arduino != null) { 
+                // agregar codigo para verificar con que tipo de conexion se desea trabajar
+                if (botonEstado == "PUSH_ON")
+                {
+                    Debug.WriteLine("REGANDO - POR BOTON");
+                    await arduino.Regar(true);
+                    elip_Azul.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF13D9FF"));
+                }
+                else
+                {
+                    Debug.WriteLine("NO REGANDO - POR BOTON");
+                    await arduino.Regar(false);
+                    elip_Azul.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF808080"));
+                }
             }
+            
         }
 
+        // metodo para actualizar los controles de la interfaz en base a la data recibida
+        private void ActualizarInterfaz(TempData temp, int humedad)
+        {
+            control_humedad.Value = humedad;
+            control_temperatura.Value = temp.Temperatura;
+            control_temperatura.Text = $"{temp.Temperatura}°C";
+
+            AgregarTemperaturaGrafico(temp);
+        }
+
+        #endregion
+
+        #region Eventos
+
+        // evento click para abrir la ventana de conexion de puertos 
+        private async void btn_openWindowPorts_Click(object sender, RoutedEventArgs e)
+        {
+            EmergenteWindow puertosWindow = new EmergenteWindow();
+            puertosWindow.ShowDialog();
+
+            // verifica si luego de cerrar la ventana de los puertos, se conecto a uno de ellos
+            if (EmergenteWindow.puertoSerial != null && EmergenteWindow.puertoSerial.IsOpen)
+            {
+                await RecolectarDatos_Arduino();
+                //EmergenteWindow.puertoSerial.Close();
+            }
+
+        }
+
+        // evento click para apagar el buzzer
         private async void btnApagarBuzzer_Click(object sender, RoutedEventArgs e)
         {
             if (arduino != null)
             {
-                await arduino.TurnOffBuzzer();
+                await arduino.EstadoBuzzer(false);
                 MessageBox.Show("Apagué tu feo Bauser");
             }
         }
 
-        private void btn_minimizar_Click(object sender, RoutedEventArgs e)
-        {
-            this.WindowState = WindowState.Minimized;
-        }
-
+        // evento click para culminar la tarea de recolectar datos, cerrar el puerto serial y cerrar la ventana principal,
         private void btn_cerrar_Click(object sender, RoutedEventArgs e)
         {
             cts?.Cancel();
+            if (EmergenteWindow.puertoSerial != null && EmergenteWindow.puertoSerial.IsOpen)
+            {
+                EmergenteWindow.puertoSerial.Close();
+            }
             this.Close();
+        }
+
+        #region Eventos solo para la interaccion con la intefaz, sin logica
+
+        private void btn_minimizar_Click(object sender, RoutedEventArgs e)
+        {
+            this.WindowState = WindowState.Minimized;
         }
 
         private void panel_header_MouseDown(object sender, MouseButtonEventArgs e)
@@ -197,37 +294,9 @@ namespace Presentation
             }
         }
 
-        private async Task registrar_temperatura(double temperatura)
-        {
-            var nuevoRegistro = new TempData
-            {
-                Fecha = DateTime.Now,
-                Temperatura = temperatura
-            };
+        #endregion
 
-            await Dispatcher.InvokeAsync(async () => {
-                await Json.AgregarRegistroJson(nuevoRegistro);
-            });
-
-            AgregarTemperaturaGrafico(nuevoRegistro);
-        }
-
-        private void btn_add_Click(object sender, RoutedEventArgs e)
-        {
-            Random random = new Random();
-            registrar_temperatura(random.Next(-5, 37));
-        }
-
-        private void btn_openWindowsPorts_Click(object sender, RoutedEventArgs e)
-        {
-            EmergenteWindow puertosWindow = new EmergenteWindow();
-            puertosWindow.ShowDialog();
-
-            if (EmergenteWindow.puertoSerial != null && EmergenteWindow.puertoSerial.IsOpen)
-            {
-                StartDataCollection();
-            }
-        }
+        #endregion
 
 
 
