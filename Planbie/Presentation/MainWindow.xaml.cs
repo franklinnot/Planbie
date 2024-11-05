@@ -25,8 +25,11 @@ namespace Presentation
         public MainWindow()
         {
             InitializeComponent();
-            SeleccionWorkspace sw = new SeleccionWorkspace();
-            sw.ShowDialog();
+            //SeleccionWorkspace sw = new SeleccionWorkspace();
+            //sw.ShowDialog();
+
+            BrokerCluster bc = new BrokerCluster();
+            bc.ShowDialog();
 
             CargarDatosJson(); // codigo para cargar y configurar el grafico de temperatura respecto al tiempo
             //RecibirMQTT();
