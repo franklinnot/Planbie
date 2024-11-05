@@ -76,13 +76,11 @@ namespace Presentation.Logica
         {
             if (peligro) {
                 await Regar(true);
-                await EstadoBuzzer(true);
                 await EstadoLed("PELIGRO");
             }
             else
             {
                 await Regar(false);
-                await EstadoBuzzer(false);
                 await EstadoLed("CORRECTO");
             }
         }

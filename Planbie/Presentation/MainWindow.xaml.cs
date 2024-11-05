@@ -15,7 +15,10 @@ namespace Presentation
         private Json json = new Json();
         // util para cuando se quiera cancelar la tarea de recoleccion de datos o envio de comandos (metodo RecolectarDatos_Arduino)
         // public static por si en la ventana de ports cierra la conexion del puerto -- linea 90 en la ventana emergente y dentro btn_cerrar_Click en este doc
-        public static CancellationTokenSource? cts; 
+        public static CancellationTokenSource? cts;
+        bool apagarBuzzer = false; // ayuda a verificar si se ha dado click en el boton del buzzer para que este este apagado o encendido
+        bool alertaDetectada = false; // false para cuando no hay alertas y true para cuando si las hay
+        bool buzzerEncendido = false; // una variable que ayuda a verificar si el buzzer esta encendido
 
         public MainWindow()
         {
@@ -98,6 +101,8 @@ namespace Presentation
                             MessageBox.Show("Hubo un error en la recopilación de datos");
                             Debug.WriteLine($"Error en la recopilación de datos: {ex.Message}");
                             cts?.Cancel();
+                            arduino = null;
+                            EmergenteWindow.puertoSerial.Close();
                         }
                     }
                 }, cts.Token); // se pasa el token de cancelación a Task.Run 
@@ -196,13 +201,19 @@ namespace Presentation
             if (temperatura >= 40 && humedad < 60)
             {
                 Debug.WriteLine("ALERTA: Alta temperatura y baja humedad.");
+                alertaDetectada = true;
                 await arduino.EstadoPeligro(true);
+                if (!apagarBuzzer) { // si el buzzer no ha sido apagado
+                    await EstadoBuzzer(true);
+                }
             }
             else
             {
+                alertaDetectada = false;
                 await arduino.EstadoPeligro(false);
                 // solo si la alerta no ha sido enviada, se evaluara el estado del boton manual de riego
                 await EstadoBotonRiego(estado_boton);
+                await EstadoBuzzer(false);
             }
         }
 
@@ -227,6 +238,20 @@ namespace Presentation
                 }
             }
             
+        }
+
+        private async Task EstadoBuzzer(bool encender)
+        {
+            if (encender && !buzzerEncendido)
+            {
+                await arduino.EstadoBuzzer(true);
+                buzzerEncendido = true;
+            }
+            else if (!encender && buzzerEncendido)
+            {
+                await arduino.EstadoBuzzer(false);
+                buzzerEncendido = false;
+            }
         }
 
         // metodo para actualizar los controles de la interfaz en base a la data recibida
@@ -263,8 +288,26 @@ namespace Presentation
         {
             if (arduino != null)
             {
-                await arduino.EstadoBuzzer(false);
-                MessageBox.Show("Apagué tu feo Bauser");
+                apagarBuzzer = !apagarBuzzer; // cada que haga click, se alterna su estadop
+
+                if (apagarBuzzer)
+                {
+                    // si ha sido detectada una alerta significa que le buzzer esta prendido
+                    // por lo tanto, al darle click a este boton, lo apagara
+                    Debug.WriteLine("Buzzer apagado manualmente");
+                    await EstadoBuzzer(false);
+                    MessageBox.Show("El buzzer permanecerá apagado.");
+                }
+                else
+                {
+                    Debug.WriteLine("Buzzer encendido manualmente");
+                    // si se vuelve a activar el buzzer manualmente, respeta las alertas actuales
+                    if (alertaDetectada)
+                    {
+                        await EstadoBuzzer(true);
+                    }
+                }
+
             }
         }
 
