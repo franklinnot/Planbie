@@ -66,6 +66,34 @@ namespace Presentation.Properties {
         ///&lt;svg width=&quot;800px&quot; height=&quot;800px&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;&gt;
         ///        ///&lt;g id=&quot;SVGRepo_bgCarrier&quot; stroke-width=&quot;0&quot;/&gt;
         ///        ///&lt;g id=&quot;SVGRepo_tracerCarrier&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;/&gt;
+        ///        ///&lt;g id=&quot;SVGRepo_iconCarrier&quot;&gt; &lt;path d=&quot;M15 20L7 12L15 4&quot; stroke=&quot;#ffffff&quot; stroke-width=&quot;2&quot; stroke- [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string arrow_left {
+            get {
+                return ResourceManager.GetString("arrow-left", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;!DOCTYPE svg PUBLIC &quot;-//W3C//DTD SVG 1.1//EN&quot; &quot;http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd&quot;&gt;
+        ///        ///&lt;!-- Uploaded to: SVG Repo, www.svgrepo.com, Transformed by: SVG Repo Mixer Tools --&gt;
+        ///&lt;svg width=&quot;800px&quot; height=&quot;800px&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot; transform=&quot;rotate(180)&quot;&gt;
+        ///        ///&lt;g id=&quot;SVGRepo_bgCarrier&quot; stroke-width=&quot;0&quot;/&gt;
+        ///        ///&lt;g id=&quot;SVGRepo_tracerCarrier&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;/&gt;
+        ///        ///&lt;g id=&quot;SVGRepo_iconCarrier&quot;&gt; &lt;path d=&quot;M15 20L7 12L15 4&quot; stroke=&quot;#ffffff&quot;  [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string arrow_right {
+            get {
+                return ResourceManager.GetString("arrow-right", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;!DOCTYPE svg PUBLIC &quot;-//W3C//DTD SVG 1.1//EN&quot; &quot;http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd&quot;&gt;
+        ///        ///&lt;!-- Uploaded to: SVG Repo, www.svgrepo.com, Transformed by: SVG Repo Mixer Tools --&gt;
+        ///&lt;svg width=&quot;800px&quot; height=&quot;800px&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;&gt;
+        ///        ///&lt;g id=&quot;SVGRepo_bgCarrier&quot; stroke-width=&quot;0&quot;/&gt;
+        ///        ///&lt;g id=&quot;SVGRepo_tracerCarrier&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;/&gt;
         ///        ///&lt;g id=&quot;SVGRepo_iconCarrier&quot;&gt; &lt;path fill-rule=&quot;evenodd&quot; clip-rule=&quot;evenodd&quot; d=&quot;M5.29289 5.29289C5. [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string close_x {
@@ -139,6 +167,19 @@ namespace Presentation.Properties {
         internal static string loguito {
             get {
                 return ResourceManager.GetString("loguito", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;!DOCTYPE svg PUBLIC &quot;-//W3C//DTD SVG 1.1//EN&quot; &quot;http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd&quot;&gt;
+        ///        ///&lt;!-- Uploaded to: SVG Repo, www.svgrepo.com, Transformed by: SVG Repo Mixer Tools --&gt;
+        ///&lt;svg fill=&quot;#ffffff&quot; version=&quot;1.1&quot; id=&quot;Capa_1&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot; xmlns:xlink=&quot;http://www.w3.org/1999/xlink&quot; width=&quot;800px&quot; height=&quot;800px&quot; viewBox=&quot;0 0 575.953 575.953&quot; xml:space=&quot;preserve&quot; stroke=&quot;#ffffff&quot;&gt;
+        ///        ///&lt;g id=&quot;SVGRepo_bgCarrier&quot; stroke-width=&quot;0&quot;/&gt;
+        ///        ///&lt;g id=&quot;SVGRepo_tracerCarrier&quot; stroke-linecap=&quot;round&quot; stro [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string loguito_conexion {
+            get {
+                return ResourceManager.GetString("loguito_conexion", resourceCulture);
             }
         }
         

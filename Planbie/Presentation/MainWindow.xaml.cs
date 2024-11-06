@@ -20,32 +20,20 @@ namespace Presentation
         bool apagarBuzzer = false; // ayuda a verificar si se ha dado click en el boton del buzzer para que este este apagado o encendido
         bool alertaDetectada = false; // false para cuando no hay alertas y true para cuando si las hay
         bool buzzerEncendido = false; // una variable que ayuda a verificar si el buzzer esta encendido
-
         private System.Timers.Timer mqttTimer;
-
-
+       
         public MainWindow()
         {
             InitializeComponent();
-            //SeleccionWorkspace sw = new SeleccionWorkspace();
-            //sw.ShowDialog();
-
-            BrokerCluster bc = new BrokerCluster();
-            bc.ShowDialog();
-
             CargaInicialDatosJson(); // codigo para cargar y configurar el grafico de temperatura respecto al tiempo
             //RecibirMQTT();
             //WindowLoad();
         }
 
-
-
-
         //Recibir 
         public async Task RecibirMQTT()
         {
-            var mqttClient = new ConectionMQTT();
-
+            var mqttClient = new ConnectionMQTT();
             mqttClient.OnMessageReceived += (topic, message) =>
             {
                 // Solamente se recepcionarán datos del topic: "telemetria"
@@ -68,7 +56,7 @@ namespace Presentation
 
         // Enviar
 
-        private void IniciarEnvioMQTT(ConectionMQTT mqttClient)
+        private void IniciarEnvioMQTT(ConnectionMQTT mqttClient)
         {
             mqttTimer = new System.Timers.Timer(5000); // Configura el temporizador para 5 segundos
             mqttTimer.Elapsed += async (sender, e) => await EnviarMQTT(mqttClient);
@@ -76,7 +64,7 @@ namespace Presentation
             mqttTimer.Start();
         }
 
-        private async Task EnviarMQTT(ConectionMQTT mqttClient)
+        private async Task EnviarMQTT(ConnectionMQTT mqttClient)
         {
             var rand = new Random();
             double temperature = 28.7;
@@ -102,7 +90,7 @@ namespace Presentation
 
         private async Task WindowLoad()
         {
-            var mqttClient = new ConectionMQTT();
+            var mqttClient = new ConnectionMQTT();
             bool isConnected = await mqttClient.Connect();
 
             if (isConnected)
@@ -355,6 +343,41 @@ namespace Presentation
 
         #region Eventos
 
+        // cerrar conexiones
+        private async Task CerrarConexion()
+        {
+
+
+        }
+
+        // evento click para abrir la ventana de tipo de conexion
+        private void btn_seleccionarConexion_Click(object sender, RoutedEventArgs e)
+        {
+            SeleccionWorkspace tipoConexion = new SeleccionWorkspace();
+            tipoConexion.ShowDialog();
+
+            // verificamos su decision luego de cerrar la ventana
+            if (!string.IsNullOrEmpty(SeleccionWorkspace.workspace)) {
+                // si se selecciono una conexion, se habilitaran los botones para que pueda conectarse
+                string worspace = SeleccionWorkspace.workspace;
+                if (worspace == "ARDUINO")
+                {
+                    panel_btn_mqtt.Visibility = Visibility.Hidden;
+                    panel_btn_puertos.Visibility = Visibility.Visible;
+                }
+                else if (worspace == "MQTT")
+                {
+                    panel_btn_puertos.Visibility = Visibility.Hidden;
+                    panel_btn_mqtt.Visibility = Visibility.Visible;
+                }
+            }
+            else
+            {
+                panel_btn_puertos.Visibility = Visibility.Hidden;
+                panel_btn_mqtt.Visibility = Visibility.Hidden;
+            }
+        }
+
         // evento click para abrir la ventana de conexion de puertos 
         private async void btn_openWindowPorts_Click(object sender, RoutedEventArgs e)
         {
@@ -365,9 +388,21 @@ namespace Presentation
             if (EmergenteWindow.puertoSerial != null && EmergenteWindow.puertoSerial.IsOpen)
             {
                 await RecolectarDatos_Arduino();
-                //EmergenteWindow.puertoSerial.Close();
             }
 
+        }
+
+        // evento click para abrir la ventana de conectarse al broker
+        private async void btn_openWindowMQTT_Click(object sender, RoutedEventArgs e)
+        {
+            BrokerCluster ventanaMQTT = new BrokerCluster();
+            ventanaMQTT.ShowDialog();
+
+            // verifica si luego de cerrar la ventana de los puertos, se conecto a uno de ellos
+            //if (EmergenteWindow.puertoSerial != null && EmergenteWindow.puertoSerial.IsOpen)
+            //{
+            //    //await RecolectarDatos_Arduino();
+            //}
         }
 
         // evento click para apagar el buzzer
@@ -424,8 +459,11 @@ namespace Presentation
             }
         }
 
+
         #endregion
 
         #endregion
+
+
     }
 }

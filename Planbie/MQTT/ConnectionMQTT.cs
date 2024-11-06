@@ -7,15 +7,16 @@ using System.Text.Json;
 
 namespace MQTT
 {
-    public class ConectionMQTT
+    public class ConnectionMQTT
     {
         private readonly HiveMQClient client;
         private readonly HiveMQClientOptions options;
+        public bool IsConnected => client?.IsConnected() ?? false;
 
         // evento para cuando se recibe un mensaje, se incluye tambien el topic de origen
         public event Action<string, string>? OnMessageReceived; // (topic, message)
 
-        public ConectionMQTT(string? host = null, int? port = null, string? username = null, string? password = null)
+        public ConnectionMQTT(string? host = null, int? port = null, string? username = null, string? password = null)
         {
             options = new HiveMQClientOptions
             {
@@ -37,6 +38,19 @@ namespace MQTT
             };
         }
 
+        // Método para cerrar la conexión de manera segura
+        public async Task Disconnect()
+        {
+            try
+            {
+                var disconnectResult = await client.DisconnectAsync().ConfigureAwait(false);
+                Debug.Write("Desconectado satisfactoriamente.");
+            }
+            catch (Exception e)
+            {
+                Debug.Write($"Error al desconectar del Broker: {e.Message}");
+            }
+        }
 
         // metodo para conectarse al broker (hive mq)
         public async Task<bool> Connect()

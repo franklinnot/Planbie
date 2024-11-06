@@ -1,4 +1,4 @@
-﻿<Window x:Name="window_main"
+﻿<Window
     x:Class="Presentation.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -9,6 +9,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:svgc="http://sharpvectors.codeplex.com/svgc/"
     xmlns:sys="clr-namespace:System;assembly=mscorlib"
+    x:Name="window_main"
     Title="Planbie"
     Width="900"
     Height="850"
@@ -39,7 +40,32 @@
                         <ControlTemplate.Triggers>
                             <!--  Efecto hover  -->
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="LightBlue" />
+                                <Setter TargetName="border" Property="Background" Value="#FF4B4B4B" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <!--  Fondo por defecto  -->
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+
+        <Style x:Key="btn" TargetType="Button">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border
+                            x:Name="border"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="0"
+                            CornerRadius="0">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <!--  Efecto hover  -->
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#FF4B4B4B" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -82,7 +108,6 @@
             <hc:FlexPanel
                 x:Name="panel_header"
                 Grid.Row="0"
-                Width="900"
                 Height="25"
                 Background="Transparent"
                 MouseDown="panel_header_MouseDown">
@@ -90,17 +115,50 @@
                 <hc:FlexPanel Height="25" Margin="8,0,-8,0">
                     <Image Width="16" Source="{svgc:SvgImage Source=/Resources/loguito.svg, AppName=Presentation}" />
                 </hc:FlexPanel>
-                <!--  Puertos  -->
-                <hc:FlexPanel Height="25" Margin="14,0,-7,0">
+                <!--  Tipo de conexion  -->
+                <hc:FlexPanel Height="24" Margin="12,0,-12,1">
+                    <Button
+                        x:Name="btn_seleccionarConexion"
+                        Width="78"
+                        Height="24"
+                        Padding="0,0,0,0"
+                        Background="Transparent"
+                        BorderBrush="{x:Null}"
+                        BorderThickness="0"
+                        Click="btn_seleccionarConexion_Click"
+                        Cursor="Hand"
+                        Style="{StaticResource btn}">
+                        <TextBlock
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Foreground="#FFEDEDED">
+                            Workspace
+                            <Image
+                                Width="10"
+                                Height="10"
+                                Margin="0,0,0,-0.8"
+                                Source="{svgc:SvgImage Source=/Resources/loguito_conexion.svg,
+                                                       AppName=Presentation}" />
+                        </TextBlock>
+                    </Button>
+                </hc:FlexPanel>
+                <!--  Puertos / ARDUINO  -->
+                <hc:FlexPanel
+                    x:Name="panel_btn_puertos"
+                    Height="24"
+                    Margin="12,0,-5,1"
+                    Visibility="Hidden">
                     <Button
                         x:Name="btn_openWindowPorts"
-                        Width="60"
-                        Height="25"
+                        Width="64"
+                        Height="24"
                         Padding="0,0,0,0"
-                        Background="{x:Null}"
+                        Background="Transparent"
                         BorderBrush="{x:Null}"
+                        BorderThickness="0"
                         Click="btn_openWindowPorts_Click"
-                        Cursor="Hand">
+                        Cursor="Hand"
+                        Style="{StaticResource btn}">
                         <TextBlock
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
@@ -115,18 +173,49 @@
                         </TextBlock>
                     </Button>
                 </hc:FlexPanel>
+                <!--  MQTT  -->
+                <hc:FlexPanel
+                    x:Name="panel_btn_mqtt"
+                    Height="24"
+                    Margin="-59,0,66,1"
+                    Visibility="Hidden">
+                    <Button
+                        x:Name="btn_openWindowMQTT"
+                        Width="55"
+                        Height="24"
+                        Background="Transparent"
+                        BorderBrush="{x:Null}"
+                        BorderThickness="0"
+                        Click="btn_openWindowMQTT_Click"
+                        Cursor="Hand"
+                        Style="{StaticResource btn}">
+                        <TextBlock
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Foreground="#FFEDEDED">
+                            MQTT
+                            <Image
+                                Width="10"
+                                Height="10"
+                                Margin="0,0,0,-0.8"
+                                Source="{svgc:SvgImage Source=/Resources/door-exit-white.svg,
+                                                       AppName=Presentation}" />
+                        </TextBlock>
+                    </Button>
+                </hc:FlexPanel>
 
                 <!--  Leds y buzzer  -->
-                <hc:FlexPanel Margin="316,0,-315,0">
+                <hc:FlexPanel Margin="173,0,-172,1">
                     <!--  Leds  -->
-                    <hc:FlexPanel Height="25" JustifyContent="SpaceBetween">
+                    <hc:FlexPanel Height="24" JustifyContent="SpaceBetween">
                         <Button
                             x:Name="led_temperatura"
                             Width="25"
-                            Height="25"
+                            Height="24"
                             Padding="0,0,0,0"
-                            Background="{x:Null}"
+                            Background="Transparent"
                             BorderBrush="{x:Null}"
+                            BorderThickness="0"
                             Cursor="Hand">
                             <Ellipse
                                 x:Name="elip_temperatura"
@@ -140,10 +229,11 @@
                         <Button
                             x:Name="led_humedad"
                             Width="25"
-                            Height="25"
+                            Height="24"
                             Padding="0,0,0,0"
-                            Background="{x:Null}"
+                            Background="Transparent"
                             BorderBrush="{x:Null}"
+                            BorderThickness="0"
                             Cursor="Hand">
                             <Ellipse
                                 x:Name="elip_humedad"
@@ -157,10 +247,11 @@
                         <Button
                             x:Name="led_Azul"
                             Width="25"
-                            Height="25"
+                            Height="24"
                             Padding="0,0,0,0"
-                            Background="{x:Null}"
+                            Background="Transparent"
                             BorderBrush="{x:Null}"
+                            BorderThickness="0"
                             Cursor="Hand">
                             <Ellipse
                                 x:Name="elip_Azul"
@@ -173,14 +264,15 @@
                         </Button>
                     </hc:FlexPanel>
                     <!--  Alarma/Buzzer  -->
-                    <hc:FlexPanel Width="25" Height="25">
+                    <hc:FlexPanel Width="25" Height="24">
                         <Button
                             x:Name="btnApagarBuzzer"
                             Width="25"
-                            Height="25"
+                            Height="24"
                             Padding="0,0,0,0"
-                            Background="{x:Null}"
+                            Background="Transparent"
                             BorderBrush="{x:Null}"
+                            BorderThickness="0"
                             Click="btnApagarBuzzer_Click"
                             Cursor="Hand">
                             <Image
@@ -193,25 +285,31 @@
                 </hc:FlexPanel>
 
                 <!--  Minimizar y cerrar  -->
-                <hc:FlexPanel Margin="667,-1,-667,0" Panel.ZIndex="200">
+                <hc:FlexPanel
+                    Height="26"
+                    Margin="523,-1,-523,0"
+                    Panel.ZIndex="200">
                     <Button
                         x:Name="btn_minimizar"
                         Width="24"
                         Height="26"
-                        Padding="0,0,0,0"
+                        Padding="0"
                         Background="Transparent"
                         BorderBrush="{x:Null}"
+                        BorderThickness="0"
                         Click="btn_minimizar_Click"
-                        Cursor="Hand">
+                        Cursor="Hand"
+                        Style="{StaticResource btn}">
                         <Image Width="8" Source="{svgc:SvgImage Source=/Resources/minimize.svg}" />
                     </Button>
                     <Button
                         x:Name="btn_cerrar"
                         Width="24"
                         Height="26"
-                        Padding="0,0,0,0"
+                        Padding="0"
                         Background="Transparent"
                         BorderBrush="{x:Null}"
+                        BorderThickness="0"
                         Click="btn_cerrar_Click"
                         Cursor="Hand"
                         Style="{StaticResource btn-close}">
@@ -336,7 +434,7 @@
                 </hc:FlexPanel>
                 <hc:FlexPanel
                     Width="360"
-                    Height="48"
+                    Height="52"
                     Margin="269,66,269,-66"
                     FlexDirection="Column"
                     JustifyContent="SpaceBetween">

@@ -1,19 +1,21 @@
-﻿<Window x:Class="Presentation.SeleccionWorkspace"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:Presentation"
-        xmlns:svgc="http://sharpvectors.codeplex.com/svgc/"
-        mc:Ignorable="d"
-        Height="125" 
-        Width="400"
-        AllowsTransparency="True"
-        Background="Transparent"
-        ResizeMode="NoResize"
-        Topmost="True"
-        WindowStartupLocation="CenterScreen"
-        WindowStyle="None">
+﻿<Window
+    x:Class="Presentation.SeleccionWorkspace"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:hc="https://handyorg.github.io/handycontrol"
+    xmlns:local="clr-namespace:Presentation"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:svgc="http://sharpvectors.codeplex.com/svgc/"
+    Width="400"
+    Height="125"
+    AllowsTransparency="True"
+    Background="Transparent"
+    ResizeMode="NoResize"
+    Topmost="True"
+    WindowStartupLocation="CenterScreen"
+    WindowStyle="None"
+    mc:Ignorable="d">
 
     <Window.Resources>
         <FontFamily x:Key="Outfit">/Presentation;component/Resources/#Outfit Regular</FontFamily>
@@ -25,11 +27,11 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border
-                        x:Name="border"
-                        Background="{TemplateBinding Background}"
-                        BorderBrush="{TemplateBinding BorderBrush}"
-                        BorderThickness="0"
-                        CornerRadius="8">
+                            x:Name="border"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="0"
+                            CornerRadius="6">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                         <ControlTemplate.Triggers>
@@ -44,16 +46,42 @@
             <!--  Fondo por defecto  -->
             <Setter Property="Background" Value="Transparent" />
         </Style>
+
+        <Style x:Key="btn_active" TargetType="Button">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border
+                            x:Name="border"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="0"
+                            CornerRadius="6">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <!--  Efecto hover  -->
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#FFe63946" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <!--  Fondo por defecto  -->
+            <Setter Property="Background" Value="Transparent" />
+        </Style>
+
         <Style x:Key="btn-close" TargetType="Button">
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border
-                    x:Name="border"
-                    Background="{TemplateBinding Background}"
-                    BorderBrush="{TemplateBinding BorderBrush}"
-                    BorderThickness="0"
-                    CornerRadius="0, 8, 0, 0">
+                            x:Name="border"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="0"
+                            CornerRadius="0, 8, 0, 0">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                         <ControlTemplate.Triggers>
@@ -74,55 +102,106 @@
 
 
     <Border
-    Background="#FF2B2B2B"
-    BorderBrush="#FF4B4B4B"
-    BorderThickness="1"
-    CornerRadius="8,8,8,8">
+        Background="#FF2B2B2B"
+        BorderBrush="#FF4B4B4B"
+        BorderThickness="1"
+        CornerRadius="8,8,8,8">
         <Grid Background="Transparent">
 
+            <!--  Boton para cerrar la ventana  -->
             <Button
-            x:Name="btn_cerrar"
-            Width="24"
-            Height="24"
-            Margin="375,-1,-1,100"
-            Padding="0"
-            BorderBrush="{x:Null}"
-            Style="{StaticResource btn-close}">
+                x:Name="btn_cerrar"
+                Width="24"
+                Height="24"
+                Margin="375,-1,-1,100"
+                Padding="0"
+                BorderBrush="{x:Null}"
+                Click="btn_cerrar_Click"
+                Style="{StaticResource btn-close}">
                 <Image Width="8" Source="{svgc:SvgImage Source=/Resources/close-x.svg}" />
             </Button>
 
+            <!--  Si es que no ha seleccionado ningun tipo de conexion aun, se muestra esto  -->
+            <hc:FlexPanel
+                x:Name="panel_conexiones"
+                Width="300"
+                Height="64"
+                Margin="49,30,49,29"
+                FlexDirection="Column"
+                JustifyContent="SpaceBetween">
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Top"
+                    FontFamily="{StaticResource Outfit-SemiBold}"
+                    FontSize="14"
+                    Foreground="WhiteSmoke">
+                    ¿Cómo deseas conectarte?
+                </TextBlock>
 
-            <TextBlock
-            Margin="0,34,0,0"
-            HorizontalAlignment="Center"
-            VerticalAlignment="Top"
-            Foreground="White">
-            ¿Cómo deseas conectarte?
-            </TextBlock>
+                <hc:FlexPanel
+                    Width="228"
+                    Height="32"
+                    FlexDirection="Row"
+                    JustifyContent="SpaceBetween">
+                    <Button
+                        x:Name="btnMqtt"
+                        Width="96"
+                        Height="32"
+                        Background="#FF660CA7"
+                        BorderBrush="{x:Null}"
+                        BorderThickness="0,0,0,0"
+                        Click="btnMqtt_Click"
+                        Style="{StaticResource btn}">
+                        <TextBlock Foreground="White">MQTT</TextBlock>
+                    </Button>
 
+                    <Button
+                        x:Name="btnArduino"
+                        Width="96"
+                        Height="32"
+                        Background="#FF660CA7"
+                        BorderBrush="{x:Null}"
+                        BorderThickness="0,0,0,0"
+                        Click="btnArduino_Click"
+                        Style="{StaticResource btn}">
+                        <TextBlock Foreground="White">Arduino</TextBlock>
+                    </Button>
+                </hc:FlexPanel>
+            </hc:FlexPanel>
 
-            <Button
-                x:Name="btnMqtt"
-                Width="80"
-                Height="30"
-                Background="#FF660CA7"
-                BorderBrush="{x:Null}"
-                BorderThickness="0,0,0,0"
-                Style="{StaticResource btn}" Margin="213,62,105,31">
-                <TextBlock Foreground="White">MQTT</TextBlock>
-            </Button>
+            <!--  Si ya selecciono alguno de los tipos de conexion, se muestra esto  -->
 
-            <Button
-                 x:Name="btnArduino"
-                 Width="80"
-                 Height="30"
-                 Background="#FF660CA7"
-                 BorderBrush="{x:Null}"
-                 BorderThickness="0,0,0,0"
-                 Style="{StaticResource btn}" Margin="105,62,213,31">
-                <TextBlock Foreground="White">Arduino</TextBlock>
-            </Button>
+            <hc:FlexPanel
+                x:Name="panel_ConexionActiva"
+                Width="220"
+                Height="64"
+                Margin="89,30,89,29"
+                Background="Transparent"
+                FlexDirection="Row"
+                JustifyContent="SpaceBetween"
+                Visibility="Hidden">
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    FontFamily="{StaticResource Outfit-SemiBold}"
+                    FontSize="14"
+                    Foreground="WhiteSmoke">
+                    Conexión activa:
+                </TextBlock>
 
+                <Button
+                    x:Name="btn_ConexionActiva"
+                    Width="96"
+                    Height="32"
+                    Background="#FFD62935"
+                    BorderBrush="{x:Null}"
+                    BorderThickness="0,0,0,0"
+                    Click="btn_ConexionActiva_Click"
+                    Style="{StaticResource btn_active}">
+                    <TextBlock x:Name="txt_ConexionActiva" Foreground="White">ARDUINO</TextBlock>
+                </Button>
+
+            </hc:FlexPanel>
 
         </Grid>
     </Border>

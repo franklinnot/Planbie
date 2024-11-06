@@ -151,4 +151,13 @@
   <data name="leaf-too-bad" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\leaf-too-bad.svg;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
   </data>
+  <data name="loguito_conexion" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\loguito_conexion.svg;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="arrow-left" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\arrow-left.svg;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="arrow-right" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\arrow-right.svg;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
 </root>

@@ -3,11 +3,12 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:hc="https://handyorg.github.io/handycontrol"
     xmlns:local="clr-namespace:Presentation"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:svgc="http://sharpvectors.codeplex.com/svgc/"
     xmlns:sys="clr-namespace:System;assembly=mscorlib"
-    Width="500"
+    Width="600"
     Height="300"
     AllowsTransparency="True"
     Background="Transparent"
@@ -31,7 +32,7 @@
                             Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="0"
-                            CornerRadius="8">
+                            CornerRadius="4">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                         <ControlTemplate.Triggers>
@@ -61,7 +62,7 @@
                         <ControlTemplate.Triggers>
                             <!--  Efecto hover  -->
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="LightBlue" />
+                                <Setter TargetName="border" Property="Background" Value="#FF4B4B4B" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -80,19 +81,22 @@
         CornerRadius="8,8,8,8">
         <Grid Background="Transparent">
 
+            <!--  boton para cerrar la ventana  -->
             <Button
                 x:Name="btn_cerrar"
                 Width="24"
                 Height="24"
-                Margin="475,-1,-1,275"
+                Margin="574,0,0,274"
                 Padding="0"
                 BorderBrush="{x:Null}"
+                Click="btn_cerrar_Click"
                 Style="{StaticResource btn-close}">
                 <Image Width="8" Source="{svgc:SvgImage Source=/Resources/close-x.svg}" />
             </Button>
 
+            <!--  titulo de la ventana  -->
             <TextBlock
-                Margin="0,33,0,0"
+                Margin="0,40,0,0"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Top"
                 FontFamily="{StaticResource Outfit-SemiBold}"
@@ -101,94 +105,215 @@
                 BROKER INFORMATION
             </TextBlock>
 
-            <TextBlock
-                Margin="47,144,0,0"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Top"
-                FontSize="12"
-                Foreground="WhiteSmoke">
-                Username *:
-            </TextBlock>
-
-            <TextBlock
-                Margin="258,144,0,0"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Top"
-                FontSize="12"
-                Foreground="WhiteSmoke">
-                Password *:
-            </TextBlock>
-
-            <TextBlock
-                Width="58"
-                Margin="47,76,0,0"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Top"
-                FontSize="12"
-                Foreground="White">
-                Cluster URL:
-            </TextBlock>
-
-            <TextBlock
-                Margin="346,76,0,0"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Top"
-                FontSize="12"
-                Foreground="WhiteSmoke"
-                RenderTransformOrigin="0.539,-1.587">
-                Port:
-            </TextBlock>
-
-            <TextBox
-                x:Name="txtClusterUrl"
-                Height="30"
-                Margin="47,96,174,172"
-                Background="WhiteSmoke"
-                BorderBrush="{x:Null}"
-                FontFamily="{StaticResource Outfit}"
-                Foreground="Black" />
-
-            <TextBox
-                x:Name="txtPort"
-                Height="30"
-                Margin="346,96,60,172"
-                Background="WhiteSmoke"
-                BorderBrush="{x:Null}"
-                FontFamily="{StaticResource Outfit}"
-                Foreground="Black" />
+            <!--  panel general  -->
+            <hc:FlexPanel
+                Width="390"
+                Height="200"
+                Margin="104,60,104,38"
+                FlexDirection="Column"
+                JustifyContent="SpaceBetween">
 
 
-            <TextBox
-                x:Name="txtUsername"
-                Height="30"
-                Margin="47,164,262,104"
-                Background="WhiteSmoke"
-                BorderBrush="{x:Null}"
-                FontFamily="{StaticResource Outfit}"
-                Foreground="Black" />
+                <!--  INPUTS  -->
+                <hc:FlexPanel
+                    x:Name="panel_conexionBroker"
+                    Width="390"
+                    Height="164"
+                    Margin="0,18,0,-18"
+                    FlexDirection="Column"
+                    JustifyContent="SpaceBetween"
+                    Visibility="Hidden">
+                    <!--  entrada de los detalles de la conexion  -->
+                    <hc:FlexPanel
+                        Height="110"
+                        FlexDirection="Column"
+                        JustifyContent="SpaceBetween">
+                        <!--  url del cluster y puerto  -->
+                        <hc:FlexPanel FlexDirection="Row" JustifyContent="SpaceBetween">
+                            <!--  url del cluster  -->
+                            <hc:FlexPanel FlexDirection="Column">
+                                <TextBlock
+                                    Width="72"
+                                    Margin="0,0,0,4"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Top"
+                                    FontSize="12"
+                                    Foreground="White">
+                                    Cluster URL:
+                                </TextBlock>
+                                <TextBox
+                                    x:Name="txtClusterUrl"
+                                    Width="280"
+                                    Height="30"
+                                    Background="WhiteSmoke"
+                                    BorderBrush="{x:Null}"
+                                    BorderThickness="0"
+                                    FontFamily="{StaticResource Outfit}"
+                                    Foreground="Black" />
+                            </hc:FlexPanel>
+                            <!--  puerto  -->
+                            <hc:FlexPanel FlexDirection="Column">
+                                <TextBlock
+                                    Margin="0,0,0,4"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Top"
+                                    FontSize="12"
+                                    Foreground="WhiteSmoke"
+                                    RenderTransformOrigin="0.539,-1.587">
+                                    Port:
+                                </TextBlock>
+                                <TextBox
+                                    x:Name="txtPort"
+                                    Width="92"
+                                    Height="30"
+                                    Background="WhiteSmoke"
+                                    BorderBrush="{x:Null}"
+                                    BorderThickness="0"
+                                    FontFamily="{StaticResource Outfit}"
+                                    Foreground="Black"
+                                    MaxLength="4"
+                                    MaxLines="1" />
+                            </hc:FlexPanel>
+                        </hc:FlexPanel>
 
-            <TextBox
-                x:Name="txtPassword"
-                Width="180"
-                Height="30"
-                Margin="258,164,60,104"
-                Background="WhiteSmoke"
-                BorderBrush="{x:Null}"
-                FontFamily="{StaticResource Outfit}"
-                Foreground="Black" />
+                        <!--  usuario y password  -->
+                        <hc:FlexPanel FlexDirection="Row" JustifyContent="SpaceBetween">
+                            <!--  username  -->
+                            <hc:FlexPanel FlexDirection="Column">
+                                <TextBlock
+                                    Margin="0,0,0,4"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Center"
+                                    FontSize="12"
+                                    Foreground="WhiteSmoke">
+                                    Username *:
+                                </TextBlock>
+                                <TextBox
+                                    x:Name="txtUsername"
+                                    Width="186"
+                                    Height="30"
+                                    Background="WhiteSmoke"
+                                    BorderBrush="{x:Null}"
+                                    BorderThickness="0"
+                                    FontFamily="{StaticResource Outfit}"
+                                    Foreground="Black"
+                                    MaxLength="24" />
+                            </hc:FlexPanel>
+                            <!--  password  -->
+                            <hc:FlexPanel FlexDirection="Column">
+                                <TextBlock
+                                    Margin="0,0,0,4"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Center"
+                                    FontSize="12"
+                                    Foreground="WhiteSmoke">
+                                    Password *:
+                                </TextBlock>
+                                <TextBox
+                                    x:Name="txtPassword"
+                                    Width="186"
+                                    Height="30"
+                                    Background="WhiteSmoke"
+                                    BorderBrush="{x:Null}"
+                                    BorderThickness="0"
+                                    FontFamily="{StaticResource Outfit}"
+                                    Foreground="Black"
+                                    MaxLength="24" />
+                            </hc:FlexPanel>
+                        </hc:FlexPanel>
+                    </hc:FlexPanel>
+                    <!--  boton para conectarse al broker  -->
+                    <Button
+                        x:Name="btnConectarMqtt"
+                        Width="390"
+                        Height="34"
+                        Background="#FF660CA7"
+                        BorderBrush="{x:Null}"
+                        BorderThickness="0"
+                        Click="btnConectarMqtt_Click"
+                        Style="{StaticResource btn}">
+                        <TextBlock Foreground="White">Conectar</TextBlock>
+                    </Button>
+                </hc:FlexPanel>
 
+                <!--  Panel para suscribirse a topicos  -->
+                <hc:FlexPanel
+                    x:Name="panel_subscripcionTopicos"
+                    Width="390"
+                    Height="164"
+                    Margin="0,-182,0,0"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Top"
+                    FlexDirection="Column"
+                    JustifyContent="SpaceBetween">
+                    <!--  entrada de los topicos  -->
+                    <hc:FlexPanel
+                        Height="110"
+                        FlexDirection="Column"
+                        JustifyContent="SpaceBetween">
+                        <!--  tópico de comandos  -->
+                        <hc:FlexPanel
+                            HorizontalAlignment="Center"
+                            FlexDirection="Column"
+                            JustifyContent="SpaceBetween">
+                            <TextBlock
+                                Margin="0,0,0,4"
+                                VerticalAlignment="Center"
+                                FontSize="12"
+                                Foreground="White">
+                                Topico de Comandos:
+                            </TextBlock>
+                            <TextBox
+                                x:Name="txt_topicComandos"
+                                Width="250"
+                                Height="30"
+                                HorizontalAlignment="Left"
+                                Background="WhiteSmoke"
+                                BorderBrush="{x:Null}"
+                                BorderThickness="0"
+                                FontFamily="{StaticResource Outfit}"
+                                Foreground="Black" />
+                        </hc:FlexPanel>
+                        <!--  tópico de telemetría  -->
+                        <hc:FlexPanel
+                            HorizontalAlignment="Center"
+                            FlexDirection="Column"
+                            JustifyContent="SpaceBetween">
+                            <TextBlock
+                                Margin="0,0,0,3.4"
+                                VerticalAlignment="Center"
+                                FontSize="12"
+                                Foreground="White">
+                                Topico de Telemetría:
+                            </TextBlock>
+                            <TextBox
+                                x:Name="txt_topicTelemetria"
+                                Width="250"
+                                Height="30"
+                                HorizontalAlignment="Left"
+                                Background="WhiteSmoke"
+                                BorderBrush="{x:Null}"
+                                BorderThickness="0"
+                                FontFamily="{StaticResource Outfit}"
+                                Foreground="Black" />
+                        </hc:FlexPanel>
+                    </hc:FlexPanel>
+                    <!--  boton para conectarse al broker  -->
+                    <Button
+                        x:Name="btnSuscribirseTopicos"
+                        Width="250"
+                        Height="34"
+                        Background="#FF660CA7"
+                        BorderBrush="{x:Null}"
+                        BorderThickness="0"
+                        Click="btnSuscribirseTopicos_Click"
+                        Style="{StaticResource btn}">
+                        <TextBlock Foreground="White">Suscribirme</TextBlock>
+                    </Button>
 
-            <Button
-                x:Name="btnMqtt"
-                Height="30"
-                Margin="47,221,60,47"
-                Background="#FF660CA7"
-                BorderBrush="{x:Null}"
-                BorderThickness="0,0,0,0"
-                Style="{StaticResource btn}">
-                <TextBlock Foreground="White">Conectarse</TextBlock>
-            </Button>
+                </hc:FlexPanel>
 
+            </hc:FlexPanel>
         </Grid>
     </Border>
 

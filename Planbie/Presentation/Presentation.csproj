@@ -15,6 +15,7 @@
     <None Remove="Resources\leaf-good.svg" />
     <None Remove="Resources\leaf-too-bad.svg" />
     <None Remove="Resources\loguito.svg" />
+    <None Remove="Resources\loguito_conexion.svg" />
     <None Remove="Resources\minimize.svg" />
     <None Remove="Resources\Outfit-Regular.ttf" />
     <None Remove="Resources\Outfit-SemiBold.ttf" />
@@ -42,6 +43,7 @@
     <Resource Include="Resources\leaf-good.svg" />
     <Resource Include="Resources\leaf-too-bad.svg" />
     <Resource Include="Resources\loguito.svg" />
+    <Resource Include="Resources\loguito_conexion.svg" />
     <Resource Include="Resources\minimize.svg" />
     <Resource Include="Resources\Outfit-Regular.ttf" />
     <Resource Include="Resources\Outfit-SemiBold.ttf" />
