@@ -9,6 +9,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Resources\arrow-left.svg" />
+    <None Remove="Resources\arrow-right.svg" />
     <None Remove="Resources\close-x.svg" />
     <None Remove="Resources\door-exit-white.svg" />
     <None Remove="Resources\leaf-bad.svg" />
@@ -37,6 +39,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="Resources\arrow-left.svg" />
+    <Resource Include="Resources\arrow-right.svg" />
     <Resource Include="Resources\close-x.svg" />
     <Resource Include="Resources\door-exit-white.svg" />
     <Resource Include="Resources\leaf-bad.svg" />

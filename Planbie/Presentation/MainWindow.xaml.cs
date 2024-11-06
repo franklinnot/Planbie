@@ -362,6 +362,7 @@ namespace Presentation
                 string worspace = SeleccionWorkspace.workspace;
                 if (worspace == "ARDUINO")
                 {
+                    
                     panel_btn_mqtt.Visibility = Visibility.Hidden;
                     panel_btn_puertos.Visibility = Visibility.Visible;
                 }
