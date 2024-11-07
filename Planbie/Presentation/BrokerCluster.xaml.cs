@@ -52,17 +52,25 @@ namespace Presentation
             {
                 ConnectionMQTT.Instancia.Inicializar(host: url, port: port, username: username, password: password);
                 bool conexionExitosa = await ConnectionMQTT.Instancia.Connect();
-
-                if (conexionExitosa)
+                bool suscripcionComandos = await ConnectionMQTT.Instancia.SubscribirComandos(topicComandos);
+                bool suscripcionTelemetria = await ConnectionMQTT.Instancia.SubscribirTelemetria(topicTelemetria);
+                if (conexionExitosa && suscripcionComandos && suscripcionTelemetria)
                 {
                     BloquearTextBoxs(true);
                     conexionCerrada = false;
                     MessageBox.Show("Conectado exitosamente al broker MQTT.");
                 }
+                else if (conexionExitosa && !suscripcionComandos && suscripcionTelemetria) 
+                {
+                    MessageBox.Show($"Error al suscribirse al tópico de comandos: {topicComandos}");
+                }
+                else if (conexionExitosa && suscripcionComandos && !suscripcionTelemetria)
+                {
+                    MessageBox.Show($"Error al suscribirse al tópico de telemetria: {topicTelemetria}");
+                }
                 else
                 {
                     MessageBox.Show("Error al conectar al broker MQTT.");
-                    
                 }
 
             }
@@ -76,6 +84,7 @@ namespace Presentation
 
         private async void btnDesconectarMqtt_Click(object sender, RoutedEventArgs e)
         {
+            btnDesconectarMqtt.IsEnabled = false;
             await ConnectionMQTT.Instancia.Disconnect();
             BloquearTextBoxs(false);
             conexionCerrada = true;
@@ -83,12 +92,24 @@ namespace Presentation
 
         private void BloquearTextBoxs(bool bloquar)
         {
-            //
+            if (ConnectionMQTT.Instancia.IsConnected) {
+                txtClusterUrl.Text = ConnectionMQTT.Instancia.Host;
+                txtPort.Text = ConnectionMQTT.Instancia.Port.ToString();
+                txtUsername.Text = ConnectionMQTT.Instancia.Username;
+                txtPassword.Text = ConnectionMQTT.Instancia.Password;
+                txt_topicComandos.Text = ConnectionMQTT.Instancia.TopicComandos;
+                txt_topicTelemetria.Text = ConnectionMQTT.Instancia.TopicTelemetria;
+            }
+
+            bloquar = !bloquar;
             txtClusterUrl.IsEnabled = bloquar;
             txtPort.IsEnabled = bloquar;
             txtUsername.IsEnabled = bloquar;
             txtPassword.IsEnabled = bloquar;
+            txt_topicComandos.IsEnabled = bloquar;
+            txt_topicTelemetria.IsEnabled = bloquar;
 
+            bloquar = !bloquar;
             // si se esta bloqueando, entonces debe estar conectado
             if (bloquar) {
                 btnConectarMqtt.Visibility = Visibility.Hidden;
@@ -99,6 +120,8 @@ namespace Presentation
                 btnDesconectarMqtt.Visibility = Visibility.Hidden;
                 btnConectarMqtt.Visibility = Visibility.Visible;
             }
+
+
         }
 
         private void btn_cerrar_Click(object sender, RoutedEventArgs e)

@@ -22,39 +22,14 @@ namespace Presentation
         bool buzzerEncendido = false; // una variable que ayuda a verificar si el buzzer esta encendido
         bool ventanaCerrada = false;
         private System.Timers.Timer mqttTimer;
-       
+        private bool disposed = false;
+
         public MainWindow()
         {
             InitializeComponent();
-                                     //RecibirMQTT();
-                                     //WindowLoad();
 
             CargaInicialDatosJson(); // codigo para cargar y configurar el grafico de temperatura respecto al tiempo
         }
-
-
-
-        // Enviar
-
-        private void IniciarEnvioMQTT(string comando)
-        {
-            mqttTimer = new System.Timers.Timer(5000); // temporizador para 5 segundos
-            mqttTimer.Elapsed += async (sender, e) => await EnviarMQTT(comando);
-            mqttTimer.AutoReset = true; // Para que se repita automáticamente cada 5 segundos
-            mqttTimer.Start();
-        }
-
-        private async Task EnviarMQTT(string comando)
-        {
-            await ConnectionMQTT.Instancia.Publish(comando);
-
-            // Usa el Dispatcher de WPF para ejecutar en el hilo de la interfaz
-            await Application.Current.Dispatcher.InvokeAsync(() =>
-            {
-                Debug.WriteLine($"Comando enviado al topic '{ConnectionMQTT.Instancia.TopicComandos}': {comando}");
-            });
-        }
-
 
         #region cargar los registros de temperaturas del json en el grafico temp/tiempo y configurarlo
         private async void CargaInicialDatosJson()
@@ -119,7 +94,7 @@ namespace Presentation
                 Debug.WriteLine($"Error en la recopilación de datos: {ex.Message}");
                 cts?.Cancel();
                 ArduinoControl.Instancia.Disconnect();
-                InterfazDesconetada();
+                await InterfazDesconetada();
             }
         }
 
@@ -136,15 +111,10 @@ namespace Presentation
             }
             catch (Exception ex)
             {
-                if (!EmergenteWindow.conexionCerrada && !ventanaCerrada)
-                {
-                    MessageBox.Show($"Ha sucedido un error al establecer comunicación con el Broker.");
-                    MessageBox.Show("La recolección de datos del Broker ha culminado.");
-                }
                 Debug.WriteLine($"Error en la recopilación de datos: {ex.Message}");
-                cts?.Cancel();
-                await ConnectionMQTT.Instancia.Disconnect();
-                InterfazDesconetada();
+                //cts?.Cancel();
+                //await ConnectionMQTT.Instancia.Disconnect();
+                //InterfazDesconetada();
             }
         }
 
@@ -155,6 +125,7 @@ namespace Presentation
         // metodo util para procesar la data recibida, sin importar el tipo de conexion
         private async void ProcesarData(string datos_planos)
         {
+            Debug.WriteLine(datos_planos);
             try
             {
                 JObject data = JObject.Parse(datos_planos); // parseo de la data recibida como un json
@@ -173,13 +144,13 @@ namespace Presentation
                 await RegistrarTemperaturaJson(dataTemporal);
                 await NotificarAlertas(temperatura, humedad, estado_boton);
 
-                ActualizarInterfaz(dataTemporal, humedad);
+                await ActualizarInterfaz(dataTemporal, humedad);
             }
             catch
             {
                 cts?.Cancel();
                 ArduinoControl.Instancia.Disconnect();
-                InterfazDesconetada();
+                await InterfazDesconetada();
             }
         }
 
@@ -203,52 +174,58 @@ namespace Presentation
             */
 
             // led de temperatura
-            if (temperatura >= 40)
+            if (SeleccionWorkspace.workspace == "ARDUINO")
             {
-                elip_temperatura.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFF1349"));
-            }
-            else if (temperatura >= 30 && temperatura < 40)
-            {
-                elip_temperatura.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFD613"));
-            }
-            else
-            {
-                elip_temperatura.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF00ff77"));
-            }
 
-            // led de humedad
-            if (humedad >= 70)
-            {
-                elip_humedad.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF00ff77"));
-            }
-            else if (temperatura >= 60 && temperatura < 70)
-            {
-                elip_humedad.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFD613"));
-            }
-            else
-            {
-                elip_humedad.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFF1349"));
-            }
 
-            // notificamos la alerta
-            if (temperatura >= 40 && humedad < 60)
-            {
-                Debug.WriteLine("ALERTA: Alta temperatura y baja humedad.");
-                elip_riego.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF13D9FF"));
-                alertaDetectada = true;
-                await ArduinoControl.Instancia.EstadoPeligro(true);
-                if (!apagarBuzzer) { // si el buzzer no ha sido apagado
-                    await EstadoBuzzer(true);
+                if (temperatura >= 40)
+                {
+                    elip_temperatura.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFF1349"));
                 }
-            }
-            else
-            {
-                elip_riego.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF808080"));
-                alertaDetectada = false;
-                await ArduinoControl.Instancia.EstadoPeligro(false);
-                // solo si la alerta no ha sido enviada, se evaluara el estado del boton manual de riego
-                await EstadoBotonRiego(estado_boton);
-                await EstadoBuzzer(false);
+                else if (temperatura >= 30 && temperatura < 40)
+                {
+                    elip_temperatura.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFD613"));
+                }
+                else
+                {
+                    elip_temperatura.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF00ff77"));
+                }
+
+                // led de humedad
+                if (humedad >= 70)
+                {
+                    elip_humedad.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF00ff77"));
+                }
+                else if (temperatura >= 60 && temperatura < 70)
+                {
+                    elip_humedad.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFD613"));
+                }
+                else
+                {
+                    elip_humedad.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFF1349"));
+                }
+
+                // notificamos la alerta
+                if (temperatura >= 40 && humedad < 60)
+                {
+                    Debug.WriteLine("ALERTA: Alta temperatura y baja humedad.");
+                    elip_riego.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF13D9FF"));
+                    alertaDetectada = true;
+                    await ArduinoControl.Instancia.EstadoPeligro(true);
+                    if (!apagarBuzzer)
+                    { // si el buzzer no ha sido apagado
+                        await EstadoBuzzer(true);
+                    }
+                }
+                else
+                {
+                    elip_riego.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF808080"));
+                    alertaDetectada = false;
+                    await ArduinoControl.Instancia.EstadoPeligro(false);
+                    // solo si la alerta no ha sido enviada, se evaluara el estado del boton manual de riego
+                    await EstadoBotonRiego(estado_boton);
+                    await EstadoBuzzer(false);
+                }
             }
         }
 
@@ -290,29 +267,119 @@ namespace Presentation
         }
 
         // metodo para actualizar los controles de la interfaz en base a la data recibida
-        private void ActualizarInterfaz(TempData temp, int humedad)
+        private async Task ActualizarInterfaz(TempData temp, int humedad)
         {
-            control_humedad.Value = humedad;
-            control_temperatura.Value = temp.Temperatura;
-            control_temperatura.Text = $"{temp.Temperatura}°C";
-
-            AgregarTemperaturaGrafico(temp);
-        }
-
-        private void InterfazDesconetada() {
             try
             {
-                elip_temperatura.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF808080"));
-                elip_humedad.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF808080"));
-                elip_riego.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF808080"));
+                // Actualizar el valor de la humedad
+                await Dispatcher.InvokeAsync(() =>
+                {
+                    control_humedad.Value = humedad;
+                });
+
+                // Actualizar el valor y el texto de la temperatura
+                await Dispatcher.InvokeAsync(() =>
+                {
+                    control_temperatura.Value = temp.Temperatura;
+                    control_temperatura.Text = $"{temp.Temperatura}°C";
+                });
+
+                // Llamar al método para agregar temperatura al gráfico
+                await Dispatcher.InvokeAsync(() =>
+                {
+                    AgregarTemperaturaGrafico(temp);
+                });
             }
-            catch (Exception ex) {
-                
+            catch (Exception ex)
+            {
                 Debug.WriteLine(ex);
             }
         }
 
+
+        private async Task InterfazDesconetada()
+        {
+            try
+            {
+                // Cambia el color de cada elipse en el hilo de la UI
+                await Dispatcher.InvokeAsync(() =>
+                {
+                    elip_temperatura.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF808080"));
+                });
+
+                await Dispatcher.InvokeAsync(() =>
+                {
+                    elip_humedad.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF808080"));
+                });
+
+                await Dispatcher.InvokeAsync(() =>
+                {
+                    elip_riego.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF808080"));
+                });
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex);
+            }
+        }
+
+
         #endregion
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposed)
+            {
+                if (disposing)
+                {
+                    // Liberar recursos administrados
+                    cts?.Dispose();
+                    mqttTimer?.Dispose();
+
+                    // Desuscribir eventos
+                    if (ArduinoControl.Instancia != null)
+                    {
+                        ArduinoControl.Instancia.OnDataReceived -= ProcesarData;
+                    }
+                    if (ConnectionMQTT.Instancia != null)
+                    {
+                        ConnectionMQTT.Instancia.OnDataReceived -= ProcesarData;
+                    }
+                }
+
+                disposed = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        // Modificar el método de cierre
+        private async Task CerrarAplicacion()
+        {
+            try
+            {
+                ventanaCerrada = true;
+                if (cts != null)
+                {
+                    await Task.Run(() => cts.Cancel());
+                }
+
+                if (ArduinoControl.Instancia?.IsConnected == true)
+                {
+                    await Task.Run(() => ArduinoControl.Instancia.Disconnect());
+                }
+
+                Dispose();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error al cerrar la aplicación: {ex.Message}");
+            }
+        }
 
         #region Eventos
 
@@ -366,10 +433,10 @@ namespace Presentation
             ventanaMQTT.ShowDialog();
 
             // verifica si luego de cerrar la ventana de los puertos, se conecto a uno de ellos
-            //if (EmergenteWindow.puertoSerial != null && EmergenteWindow.puertoSerial.IsOpen)
-            //{
-            //    //await RecolectarDatos_Arduino();
-            //}
+            if (ConnectionMQTT.Instancia.IsConnected)
+            {
+                await RecolectarDatos_MQTT();
+            }
         }
 
         // evento click para apagar el buzzer
@@ -401,14 +468,9 @@ namespace Presentation
         }
 
         // evento click para culminar la tarea de recolectar datos, cerrar el puerto serial y cerrar la ventana principal,
-        private void btn_cerrar_Click(object sender, RoutedEventArgs e)
+        private async void btn_cerrar_Click(object sender, RoutedEventArgs e)
         {
-            ventanaCerrada = true;
-            cts?.Cancel();
-            if (ArduinoControl.Instancia.IsConnected)
-            {
-                ArduinoControl.Instancia.Disconnect();
-            }
+            await CerrarAplicacion();
             this.Close();
         }
 

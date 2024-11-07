@@ -123,22 +123,42 @@ namespace MQTT
         }
 
         // Método para suscribirse al tema de comandos
-        public async Task SubscribirComandos(string topic)
+        public async Task<bool> SubscribirComandos(string topic)
         {
-            if (client == null) return;
-
-            await client.SubscribeAsync(topic);
-            TopicComandos = topic;
-            Debug.WriteLine($"Suscrito al tema de comandos: '{topic}'");
+            if (client == null || !IsConnected) return false;
+            bool resultado = false;
+            try
+            {
+                await client.SubscribeAsync(topic);
+                TopicComandos = topic;
+                resultado = true;
+                Debug.WriteLine($"Suscrito al tema de comandos: '{topic}'");
+            }
+            catch
+            {
+                resultado = false;
+                Debug.WriteLine($"Suscrito al tema de comandos: '{topic}'");
+            }
+            return resultado;
         }
 
-        public async Task SubscribirTelemetria(string topic)
+        public async Task<bool> SubscribirTelemetria(string topic)
         {
-            if (client == null) return;
-
-            await client.SubscribeAsync(topic);
-            TopicTelemetria = topic;
-            Debug.WriteLine($"Suscrito al tema de telemetría: '{topic}'");
+            if (client == null || !IsConnected) return false;
+            bool resultado = false;
+            try
+            {
+                await client.SubscribeAsync(topic);
+                TopicTelemetria = topic;
+                resultado = true;
+                Debug.WriteLine($"Suscrito al tema de telemetria: '{topic}'");
+            }
+            catch
+            {
+                resultado = false;
+                Debug.WriteLine($"Suscrito al tema de telemetria: '{topic}'");
+            }
+            return resultado;
         }
 
         // metodo para publicar un mensaje en comandos
