@@ -56,11 +56,14 @@ namespace Presentation
             // cargar los valores iniciales del grafico
             foreach (TempData data in registros)
             {
-                AgregarTemperaturaGrafico(data);
+                await Dispatcher.InvokeAsync(async () =>
+                {
+                    await AgregarTemperaturaGrafico(data);
+                });
             }
         }
 
-        public void AgregarTemperaturaGrafico(TempData data)
+        public async Task AgregarTemperaturaGrafico(TempData data)
         {
             int temp = data.Temperatura;
             temperatureValues.Add(temp);
@@ -77,24 +80,46 @@ namespace Presentation
         // si se trabaja con conexion directa, se usara este metodo 
         private async Task RecolectarDatos_Arduino()
         {
-            cts = new CancellationTokenSource(); // se inicializa el cts para recibir solicitudes de cancelacion;
-
-            ArduinoControl.Instancia.OnDataReceived += ProcesarData;
+            cts = new CancellationTokenSource();
 
             try
             {
+                ArduinoControl.Instancia.OnDataReceived += ProcesarData;
                 await ArduinoControl.Instancia.ObtenerDatos(cts.Token);
             }
             catch (Exception ex)
             {
-                if (!EmergenteWindow.conexionCerrada && !ventanaCerrada) {
-                    MessageBox.Show($"Ha sucedido un error al establecer comunicación con el dispositivo.");
-                    MessageBox.Show("La recolección de datos del ArduinoControl ha culminado.");                
-                }
                 Debug.WriteLine($"Error en la recopilación de datos: {ex.Message}");
+                await ManejarErrorConexion(ex);
+            }
+            finally
+            {
+                if (!EmergenteWindow.conexionCerrada && !ventanaCerrada)
+                {
+                    await InterfazDesconetada();
+                }
+            }
+        }
+
+        private async Task ManejarErrorConexion(Exception ex)
+        {
+            try
+            {
+                if (!EmergenteWindow.conexionCerrada && !ventanaCerrada)
+                {
+                    await Dispatcher.InvokeAsync(() =>
+                    {
+                        MessageBox.Show($"Ha sucedido un error al establecer comunicación con el dispositivo: {ex.Message}");
+                        MessageBox.Show("La recolección de datos del ArduinoControl ha culminado.");
+                    });
+                }
+
                 cts?.Cancel();
-                ArduinoControl.Instancia.Disconnect();
-                await InterfazDesconetada();
+                await Task.Run(() => ArduinoControl.Instancia.Disconnect());
+            }
+            catch (Exception innerEx)
+            {
+                Debug.WriteLine($"Error al manejar la desconexión: {innerEx.Message}");
             }
         }
 
@@ -142,9 +167,13 @@ namespace Presentation
                 // metodos asincronos por el hecho de tener que recibir datos desde un dispositivo externo
                 // y tambien por modificar el archivo json
                 await RegistrarTemperaturaJson(dataTemporal);
-                await NotificarAlertas(temperatura, humedad, estado_boton);
+                await Dispatcher.InvokeAsync(async () =>
+                {
+                    await NotificarAlertas(temperatura, humedad, estado_boton);
+                    await ActualizarInterfaz(dataTemporal, humedad);
+                });
 
-                await ActualizarInterfaz(dataTemporal, humedad);
+
             }
             catch
             {
@@ -174,8 +203,6 @@ namespace Presentation
             */
 
             // led de temperatura
-            if (SeleccionWorkspace.workspace == "ARDUINO")
-            {
 
 
                 if (temperatura >= 40)
@@ -205,6 +232,8 @@ namespace Presentation
                     elip_humedad.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFF1349"));
                 }
 
+            if (SeleccionWorkspace.workspace == "ARDUINO")
+            {
                 // notificamos la alerta
                 if (temperatura >= 40 && humedad < 60)
                 {
@@ -285,9 +314,9 @@ namespace Presentation
                 });
 
                 // Llamar al método para agregar temperatura al gráfico
-                await Dispatcher.InvokeAsync(() =>
+                await Dispatcher.InvokeAsync(async () =>
                 {
-                    AgregarTemperaturaGrafico(temp);
+                    await AgregarTemperaturaGrafico(temp);
                 });
             }
             catch (Exception ex)
@@ -437,6 +466,7 @@ namespace Presentation
             {
                 await RecolectarDatos_MQTT();
             }
+            // agregar codigo para verificar si se desconecto dandole click al boton, si es aso llamar al metodo de interfaz desconectada con el dispatcher
         }
 
         // evento click para apagar el buzzer

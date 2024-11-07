@@ -13,7 +13,6 @@ namespace Presentation.Logica
     public class ArduinoControl
     {
         public SerialPort _serialPort;
-        private bool recibiendoDatos = false;
         public string Port { get; private set; }
         public bool IsConnected => _serialPort?.IsOpen ?? false;
         public event Action<string>? OnDataReceived;

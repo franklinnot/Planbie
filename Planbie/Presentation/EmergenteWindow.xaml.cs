@@ -1,11 +1,7 @@
-﻿using HandyControl.Tools.Converter;
-using Presentation.Logica;
-using System;
+﻿using Presentation.Logica;
 using System.Diagnostics;
-using System.Drawing;
 using System.IO.Ports;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Media;
 
 namespace Presentation

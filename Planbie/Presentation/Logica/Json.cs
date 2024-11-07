@@ -1,23 +1,6 @@
-﻿using LiveCharts.Defaults;
-using LiveCharts;
-using System;
-using System.Windows;
-using System.Windows.Input;
-using LiveCharts.Wpf;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json;
-using System.Collections.Generic;
-using System.IO;
+﻿using Newtonsoft.Json;
 using System.Diagnostics;
-using System.IO.Ports;
-using System.Threading.Tasks;
-using System.Threading;
-using System.Diagnostics.Tracing;
-using System.Windows.Media;
-using SharpVectors.Converters;
-using SharpVectors.Renderers.Wpf;
-using SharpVectors.Renderers;
-using System;
+using System.IO;
 
 namespace Presentation.Logica
 {
