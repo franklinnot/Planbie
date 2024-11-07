@@ -39,45 +39,40 @@ namespace Presentation
         private void btnMqtt_Click(object sender, RoutedEventArgs e)
         {
             EstablecerTipoConexion("MQTT");
+            Debug.WriteLine($"Tipo de conexion '{workspace}' establecida");
         }
 
         private void btnArduino_Click(object sender, RoutedEventArgs e)
         {
             EstablecerTipoConexion("ARDUINO");
+            Debug.WriteLine($"Tipo de conexion '{workspace}' establecida");
         }
 
-        private void btn_ConexionActiva_Click(object sender, RoutedEventArgs e)
+        private async void btn_ConexionActiva_Click(object sender, RoutedEventArgs e)
         {
-            if (workspace == "MQTT" || workspace == "ARDUINO")
+            if (workspace == "ARDUINO")
             {
-                if (workspace == "ARDUINO")
-                {
-                    EmergenteWindow.puertoSerial?.Close();
-                    EmergenteWindow.puertoSerial = null;
-                    EmergenteWindow.puerto = null;
-                }
-                else
-                {
-                    
-                }
-                
-
-                MainWindow.cts?.Cancel();
-                workspace = string.Empty;
-
-                panel_conexiones.Visibility = Visibility.Visible;
-                panel_ConexionActiva.Visibility = Visibility.Hidden;
+                EmergenteWindow.conexionCerrada = true;
+                ArduinoControl.Instancia.Disconnect();
             }
             else
             {
-                Debug.WriteLine($"El tipo de conexión '{workspace}', no está contemplada.");
+                await ConnectionMQTT.Instancia.Disconnect();
             }
-           
+
+
+            Debug.WriteLine($"Tipo de conexion '{workspace}' cancelada");
+            MainWindow.cts?.Cancel();
+            workspace = string.Empty;
+
+            panel_conexiones.Visibility = Visibility.Visible;
+            panel_ConexionActiva.Visibility = Visibility.Hidden;
+
         }
 
         private void EstablecerTipoConexion(string conexion) 
         {
-            workspace = conexion == "ARDUINO" ? conexion : "MQTT";
+            workspace = conexion;
             txt_ConexionActiva.Text = workspace;
             panel_conexiones.Visibility = Visibility.Hidden;
             panel_ConexionActiva.Visibility = Visibility.Visible;

@@ -1,4 +1,5 @@
 ﻿using HandyControl.Tools.Converter;
+using Presentation.Logica;
 using System;
 using System.Diagnostics;
 using System.Drawing;
@@ -11,18 +12,16 @@ namespace Presentation
 {
     public partial class EmergenteWindow : Window
     {
-        public static SerialPort? puertoSerial;
-        public static string? puerto;
         private string[] puertosAnteriores = { "Carga de puertos" };
         private System.Timers.Timer? puertoTimer;
-
+        public static bool conexionCerrada = false;
         public EmergenteWindow()
         {
             InitializeComponent();
             ActualizarPuertos();
 
-            // si el puertoSerial ya esta abierto, modificamos el diseño
-            if (puertoSerial != null && puertoSerial.IsOpen)
+            // si el puertoSerial ya esta conectados, modificamos el diseño
+            if (ArduinoControl.Instancia.IsConnected)
             {
                 UIPuertoAbierto();
             }
@@ -66,16 +65,14 @@ namespace Presentation
                     }
 
                     // si el puerto ya esta abierto, seleccionarlo en el combo
-                    if (!string.IsNullOrEmpty(puerto) && puertosActuales.Contains(puerto))
+                    if (ArduinoControl.Instancia.IsConnected)
                     {
-                        cmbPuertos.SelectedItem = puerto;
+                        cmbPuertos.SelectedItem = ArduinoControl.Instancia.Port;
                     }
                     else
                     {
                         cmbPuertos.SelectedIndex = 0;
                     }
-
-                    cmbPuertos.SelectedIndex = 0;
                 });
             }
 
@@ -88,7 +85,7 @@ namespace Presentation
         private void AbrirPuerto_Click(object sender, RoutedEventArgs e)
         {
             // si el puerto ya esta abierto, cerrarlo
-            if (puertoSerial != null && puertoSerial.IsOpen)
+            if (ArduinoControl.Instancia.IsConnected)
             {
                 CerrarPuertoSerial();
             }
@@ -108,14 +105,14 @@ namespace Presentation
                 try
                 {
                     // inicializar el puerto serial y abrirlo
-                    puertoSerial = new SerialPort(puertoSeleccionado);
-                    puertoSerial.Open();
-                    puerto = puertoSeleccionado; // variable que almacena el puerto
+                    ArduinoControl.Instancia.Inicializar(puertoSeleccionado);
+                    ArduinoControl.Instancia.Connect();
 
-                    MessageBox.Show($"Puerto {puertoSeleccionado} abierto con éxito.");
+                    Debug.WriteLine($"Puerto {puertoSeleccionado} abierto con éxito.");
 
                     // Deshabilitar el ComboBox y cambiar el texto del botón
                     UIPuertoAbierto();
+                    conexionCerrada = false; // indicamos que la conexion fue abierta para que se siga recolectando datos
                 }
                 catch (Exception ex)
                 {
@@ -133,18 +130,16 @@ namespace Presentation
             try
             {
                 // lo cerramos
-                puertoSerial?.Close();
-                puertoSerial = null;
-                puerto = null;
-
-                MessageBox.Show("Puerto cerrado con éxito.");
+                MainWindow.cts?.Cancel();
+                ArduinoControl.Instancia.Disconnect();
+                Debug.WriteLine("Puerto cerrado con éxito.");
 
                 // restaurar el estado de la interfaz al cerrar el puerto
                 cmbPuertos.IsEnabled = true;
                 btn_portText.Text = "Abrir puerto";
                 btnAbrirPuerto.Background = (Brush)new BrushConverter().ConvertFrom("#FF660CA7");
+                conexionCerrada = true; // indicamos que la conexion fue cerrada para evitar que se siga recolectando datos
 
-                MainWindow.cts?.Cancel();
             }
             catch (Exception ex)
             {
@@ -157,7 +152,7 @@ namespace Presentation
         // metodo para inhabilitar el combobox y modificar el color y texto del boton si el puerto esta abierto
         private void UIPuertoAbierto()
         {
-            cmbPuertos.SelectedItem = puerto; 
+            cmbPuertos.SelectedItem = ArduinoControl.Instancia.Port; 
             cmbPuertos.IsEnabled = false;     
             btn_portText.Text = "Cerrar puerto";
             btnAbrirPuerto.Background = (Brush)new BrushConverter().ConvertFrom("#FFD62935");

@@ -4,6 +4,7 @@ using MQTT;
 using Newtonsoft.Json.Linq;
 using Presentation.Logica;
 using System.Diagnostics;
+using System.Threading;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -12,7 +13,6 @@ namespace Presentation
     public partial class MainWindow : Window
     {
         private ChartValues<int> temperatureValues = new ChartValues<int>();
-        private Arduino? arduino;
         private Json json = new Json();
         // util para cuando se quiera cancelar la tarea de recoleccion de datos o envio de comandos (metodo RecolectarDatos_Arduino)
         // public static por si en la ventana de ports cierra la conexion del puerto -- linea 90 en la ventana emergente y dentro btn_cerrar_Click en este doc
@@ -20,87 +20,41 @@ namespace Presentation
         bool apagarBuzzer = false; // ayuda a verificar si se ha dado click en el boton del buzzer para que este este apagado o encendido
         bool alertaDetectada = false; // false para cuando no hay alertas y true para cuando si las hay
         bool buzzerEncendido = false; // una variable que ayuda a verificar si el buzzer esta encendido
+        bool ventanaCerrada = false;
         private System.Timers.Timer mqttTimer;
        
         public MainWindow()
         {
             InitializeComponent();
+                                     //RecibirMQTT();
+                                     //WindowLoad();
+
             CargaInicialDatosJson(); // codigo para cargar y configurar el grafico de temperatura respecto al tiempo
-            //RecibirMQTT();
-            //WindowLoad();
         }
 
-        //Recibir 
-        public async Task RecibirMQTT()
-        {
-            var mqttClient = new ConnectionMQTT();
-            mqttClient.OnMessageReceived += (topic, message) =>
-            {
-                // Solamente se recepcionarán datos del topic: "telemetria"
-                if (topic == "telemetria")
-                {
-                    Debug.WriteLine($"Datos de telemetría recibidos: {message}");
-                }
-            };
 
-            // Conectar al cliente MQTT
-            bool isConnected = await mqttClient.Connect();
-            if (!isConnected) return;
-
-            // Suscribirse a los tópicos
-            await mqttClient.Subscribe("comandos");
-            await mqttClient.Subscribe("telemetria");
-
-            Debug.WriteLine("Publicando mensajes con datos simulados...");
-        }
 
         // Enviar
 
-        private void IniciarEnvioMQTT(ConnectionMQTT mqttClient)
+        private void IniciarEnvioMQTT(string comando)
         {
-            mqttTimer = new System.Timers.Timer(5000); // Configura el temporizador para 5 segundos
-            mqttTimer.Elapsed += async (sender, e) => await EnviarMQTT(mqttClient);
+            mqttTimer = new System.Timers.Timer(5000); // temporizador para 5 segundos
+            mqttTimer.Elapsed += async (sender, e) => await EnviarMQTT(comando);
             mqttTimer.AutoReset = true; // Para que se repita automáticamente cada 5 segundos
             mqttTimer.Start();
         }
 
-        private async Task EnviarMQTT(ConnectionMQTT mqttClient)
+        private async Task EnviarMQTT(string comando)
         {
-            var rand = new Random();
-            double temperature = 28.7;
-            double humidity = 23;
-
-            double temperaturaActual = temperature + rand.NextDouble();
-            double humedadActual = humidity + rand.NextDouble();
-
-            var payload = new
-            {
-                temperature = temperaturaActual,
-                humidity = humedadActual
-            };
-
-            await mqttClient.Publish("comandos", payload);
+            await ConnectionMQTT.Instancia.Publish(comando);
 
             // Usa el Dispatcher de WPF para ejecutar en el hilo de la interfaz
             await Application.Current.Dispatcher.InvokeAsync(() =>
             {
-                Debug.WriteLine($"Datos enviados: Temperatura = {temperaturaActual}, Humedad = {humedadActual}");
+                Debug.WriteLine($"Comando enviado al topic '{ConnectionMQTT.Instancia.TopicComandos}': {comando}");
             });
         }
 
-        private async Task WindowLoad()
-        {
-            var mqttClient = new ConnectionMQTT();
-            bool isConnected = await mqttClient.Connect();
-
-            if (isConnected)
-            {
-                await mqttClient.Subscribe("comandos");
-                await mqttClient.Subscribe("telemetria");
-
-                IniciarEnvioMQTT(mqttClient); // Inicia el temporizador para el envío de datos cada 5 segundos
-            }
-        }
 
         #region cargar los registros de temperaturas del json en el grafico temp/tiempo y configurarlo
         private async void CargaInicialDatosJson()
@@ -145,51 +99,52 @@ namespace Presentation
 
         #region codigo para recolectar los datos segun su tipo de conexion
 
-        // si se trabaja con conexion directa, se usara este metodo -- 2
+        // si se trabaja con conexion directa, se usara este metodo 
         private async Task RecolectarDatos_Arduino()
         {
-            if (EmergenteWindow.puertoSerial != null && EmergenteWindow.puertoSerial.IsOpen)
+            cts = new CancellationTokenSource(); // se inicializa el cts para recibir solicitudes de cancelacion;
+
+            ArduinoControl.Instancia.OnDataReceived += ProcesarData;
+
+            try
             {
-                bool error_recopilacion = false;
-                arduino = new Arduino(EmergenteWindow.puertoSerial); // instancia de la clase arduino solo si el puerto serial a sido abierto
-                cts = new CancellationTokenSource(); // se inicializa el cts para recibir solicitudes de cancelacion
-
-                // esto realiza una ejecucion en paralelo
-                await Task.Run(async () =>
-                {
-                    // mientras no se haya solicitado la cancelación de la tarea
-                    while (!cts.Token.IsCancellationRequested)
-                    {
-                        try
-                        {
-                            JObject data = await arduino.ObtenerDatos(); // json de los datos recibidos del ardu
-                            Dispatcher.Invoke(() => ProcesarData(data)); // utiliza el dispatcher para actualizar la intefaz y no bloquear su hilo de ejcucion
-                            await Task.Delay(5000, cts.Token); // se realizara la espera de 5 segundos y por el while volvera a ejecutarse
-                        }
-                        catch (OperationCanceledException)
-                        {
-                            break;
-                        }
-                        catch (Exception ex)
-                        {
-                            error_recopilacion = true;
-                            MessageBox.Show("Hubo un error en la recopilación de datos");
-                            Debug.WriteLine($"Error en la recopilación de datos: {ex.Message}");
-                            cts?.Cancel();
-                            arduino = null;
-                            EmergenteWindow.puertoSerial.Close();
-                        }
-                    }
-                }, cts.Token); // se pasa el token de cancelación a Task.Run 
-
-                if (!error_recopilacion) {
-                    // cuando la tarea de recoleccion de datos termine
-                    MessageBox.Show("La recolección de datos del Arduino ha culminado.");                
-                }
+                await ArduinoControl.Instancia.ObtenerDatos(cts.Token);
             }
-            else
+            catch (Exception ex)
             {
-                MessageBox.Show("El puerto serial no está abierto. Por favor, conéctese primero.");
+                if (!EmergenteWindow.conexionCerrada && !ventanaCerrada) {
+                    MessageBox.Show($"Ha sucedido un error al establecer comunicación con el dispositivo.");
+                    MessageBox.Show("La recolección de datos del ArduinoControl ha culminado.");                
+                }
+                Debug.WriteLine($"Error en la recopilación de datos: {ex.Message}");
+                cts?.Cancel();
+                ArduinoControl.Instancia.Disconnect();
+                InterfazDesconetada();
+            }
+        }
+
+        // si se trabaja con un broker mqtt, se usara este metodo
+        private async Task RecolectarDatos_MQTT()
+        {
+            cts = new CancellationTokenSource(); // se inicializa el cts para recibir solicitudes de cancelacion;
+
+            ConnectionMQTT.Instancia.OnDataReceived += ProcesarData;
+
+            try
+            {
+                await ConnectionMQTT.Instancia.ObtenerDatos(cts.Token);
+            }
+            catch (Exception ex)
+            {
+                if (!EmergenteWindow.conexionCerrada && !ventanaCerrada)
+                {
+                    MessageBox.Show($"Ha sucedido un error al establecer comunicación con el Broker.");
+                    MessageBox.Show("La recolección de datos del Broker ha culminado.");
+                }
+                Debug.WriteLine($"Error en la recopilación de datos: {ex.Message}");
+                cts?.Cancel();
+                await ConnectionMQTT.Instancia.Disconnect();
+                InterfazDesconetada();
             }
         }
 
@@ -198,10 +153,11 @@ namespace Presentation
         #region Codigo para procesar la data recibida, registrar en el json, actualizar la interfaz y enviar comandos segun el tipo de conexion
 
         // metodo util para procesar la data recibida, sin importar el tipo de conexion
-        private async void ProcesarData(JObject data)
+        private async void ProcesarData(string datos_planos)
         {
             try
             {
+                JObject data = JObject.Parse(datos_planos); // parseo de la data recibida como un json
                 int temperatura = data["temperatura"].Value<int>();
                 int humedad = data["humedad"].Value<int>();
                 string estado_boton = data["boton"].ToString();
@@ -219,9 +175,11 @@ namespace Presentation
 
                 ActualizarInterfaz(dataTemporal, humedad);
             }
-            catch (Exception e)
+            catch
             {
-                MessageBox.Show($"Ha sucedido un error al procesar los datos: {e.Message}");
+                cts?.Cancel();
+                ArduinoControl.Instancia.Disconnect();
+                InterfazDesconetada();
             }
         }
 
@@ -261,31 +219,33 @@ namespace Presentation
             // led de humedad
             if (humedad >= 70)
             {
-                elip_temperatura.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF00ff77"));
+                elip_humedad.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF00ff77"));
             }
             else if (temperatura >= 60 && temperatura < 70)
             {
-                elip_temperatura.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFD613"));
+                elip_humedad.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFD613"));
             }
             else
             {
-                elip_temperatura.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFF1349"));
+                elip_humedad.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFF1349"));
             }
 
             // notificamos la alerta
             if (temperatura >= 40 && humedad < 60)
             {
                 Debug.WriteLine("ALERTA: Alta temperatura y baja humedad.");
+                elip_riego.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF13D9FF"));
                 alertaDetectada = true;
-                await arduino.EstadoPeligro(true);
+                await ArduinoControl.Instancia.EstadoPeligro(true);
                 if (!apagarBuzzer) { // si el buzzer no ha sido apagado
                     await EstadoBuzzer(true);
                 }
             }
             else
             {
+                elip_riego.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF808080"));
                 alertaDetectada = false;
-                await arduino.EstadoPeligro(false);
+                await ArduinoControl.Instancia.EstadoPeligro(false);
                 // solo si la alerta no ha sido enviada, se evaluara el estado del boton manual de riego
                 await EstadoBotonRiego(estado_boton);
                 await EstadoBuzzer(false);
@@ -297,19 +257,19 @@ namespace Presentation
         // solo se activara si no hay una alerta ejecutandose
         private async Task EstadoBotonRiego (string botonEstado)
         {
-            if (arduino != null) { 
+            if (ArduinoControl.Instancia.IsConnected) { 
                 // agregar codigo para verificar con que tipo de conexion se desea trabajar
                 if (botonEstado == "PUSH_ON")
                 {
                     Debug.WriteLine("REGANDO - POR BOTON");
-                    await arduino.Regar(true);
-                    elip_Azul.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF13D9FF"));
+                    await ArduinoControl.Instancia.Regar(true);
+                    elip_riego.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF13D9FF"));
                 }
                 else
                 {
                     Debug.WriteLine("NO REGANDO - POR BOTON");
-                    await arduino.Regar(false);
-                    elip_Azul.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF808080"));
+                    await ArduinoControl.Instancia.Regar(false);
+                    elip_riego.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF808080"));
                 }
             }
             
@@ -319,12 +279,12 @@ namespace Presentation
         {
             if (encender && !buzzerEncendido)
             {
-                await arduino.EstadoBuzzer(true);
+                await ArduinoControl.Instancia.EstadoBuzzer(true);
                 buzzerEncendido = true;
             }
             else if (!encender && buzzerEncendido)
             {
-                await arduino.EstadoBuzzer(false);
+                await ArduinoControl.Instancia.EstadoBuzzer(false);
                 buzzerEncendido = false;
             }
         }
@@ -339,16 +299,22 @@ namespace Presentation
             AgregarTemperaturaGrafico(temp);
         }
 
+        private void InterfazDesconetada() {
+            try
+            {
+                elip_temperatura.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF808080"));
+                elip_humedad.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF808080"));
+                elip_riego.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF808080"));
+            }
+            catch (Exception ex) {
+                
+                Debug.WriteLine(ex);
+            }
+        }
+
         #endregion
 
         #region Eventos
-
-        // cerrar conexiones
-        private async Task CerrarConexion()
-        {
-
-
-        }
 
         // evento click para abrir la ventana de tipo de conexion
         private void btn_seleccionarConexion_Click(object sender, RoutedEventArgs e)
@@ -385,8 +351,8 @@ namespace Presentation
             EmergenteWindow puertosWindow = new EmergenteWindow();
             puertosWindow.ShowDialog();
 
-            // verifica si luego de cerrar la ventana de los puertos, se conecto a uno de ellos
-            if (EmergenteWindow.puertoSerial != null && EmergenteWindow.puertoSerial.IsOpen)
+            // verifica si se conecto a un puerto luego de cerrar la ventana de conexion
+            if (ArduinoControl.Instancia.IsConnected)
             {
                 await RecolectarDatos_Arduino();
             }
@@ -409,7 +375,7 @@ namespace Presentation
         // evento click para apagar el buzzer
         private async void btnApagarBuzzer_Click(object sender, RoutedEventArgs e)
         {
-            if (arduino != null)
+            if (ArduinoControl.Instancia.IsConnected)
             {
                 apagarBuzzer = !apagarBuzzer; // cada que haga click, se alterna su estadop
 
@@ -437,10 +403,11 @@ namespace Presentation
         // evento click para culminar la tarea de recolectar datos, cerrar el puerto serial y cerrar la ventana principal,
         private void btn_cerrar_Click(object sender, RoutedEventArgs e)
         {
+            ventanaCerrada = true;
             cts?.Cancel();
-            if (EmergenteWindow.puertoSerial != null && EmergenteWindow.puertoSerial.IsOpen)
+            if (ArduinoControl.Instancia.IsConnected)
             {
-                EmergenteWindow.puertoSerial.Close();
+                ArduinoControl.Instancia.Disconnect();
             }
             this.Close();
         }

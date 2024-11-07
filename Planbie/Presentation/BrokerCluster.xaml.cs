@@ -18,17 +18,17 @@ namespace Presentation
 {
     public partial class BrokerCluster : Window
     {
-        private ConnectionMQTT mqttClient;
-        public ConnectionMQTT MqttClient => mqttClient;
-
+        public static bool conexionCerrada = false;
         public BrokerCluster()
         {
             InitializeComponent();
-        }
 
-        private void btn_cerrar_Click(object sender, RoutedEventArgs e)
-        {
-            this.Close();
+            panel_conexionBroker.Visibility = Visibility.Visible;
+
+            if (ConnectionMQTT.Instancia.IsConnected)
+            {
+                BloquearTextBoxs(true);
+            }
         }
 
         private async void btnConectarMqtt_Click(object sender, RoutedEventArgs e)
@@ -38,41 +38,73 @@ namespace Presentation
             int port = castPort != 0 ? castPort : 0;
             string username = txtUsername.Text.Trim();
             string password = txtPassword.Text.Trim();
+            string topicTelemetria = txt_topicTelemetria.Text.Trim();
+            string topicComandos = txt_topicComandos.Text.Trim();
 
-            if (string.IsNullOrEmpty(url) || port == 0 || string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password)) {
+            if (string.IsNullOrEmpty(url) || port == 0 || string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password) ||
+                string.IsNullOrEmpty(topicTelemetria) || string.IsNullOrEmpty(topicComandos)) {
                 MessageBox.Show("Debes ingresar correctamente todos los campos."); 
                 return;
             }
 
+            btnConectarMqtt.IsEnabled = false;
             try
             {
-                mqttClient = new ConnectionMQTT(host: url, port: port, username: username, password: password);
-                bool conexionExitosa = await mqttClient.Connect();
+                ConnectionMQTT.Instancia.Inicializar(host: url, port: port, username: username, password: password);
+                bool conexionExitosa = await ConnectionMQTT.Instancia.Connect();
 
                 if (conexionExitosa)
                 {
+                    BloquearTextBoxs(true);
+                    conexionCerrada = false;
                     MessageBox.Show("Conectado exitosamente al broker MQTT.");
-
-                    panel_conexionBroker.Visibility = Visibility.Hidden;
-                    panel_subscripcionTopicos.Visibility = Visibility.Visible;
                 }
                 else
                 {
                     MessageBox.Show("Error al conectar al broker MQTT.");
+                    
                 }
 
-                // si todo sale bien
             }
             catch (Exception ex) {
                 MessageBox.Show("Hubo un error al intentar conectarse al Broker.");
                 Debug.WriteLine($"Hubo un error al intentar conectarse al Broker: {ex.Message}");
             }
+
+            btnConectarMqtt.IsEnabled = true;
         }
 
-        private void btnSuscribirseTopicos_Click(object sender, RoutedEventArgs e)
+        private async void btnDesconectarMqtt_Click(object sender, RoutedEventArgs e)
         {
-            string topic_telemetria = txt_topicTelemetria.Text.Trim();
-            string topic_comandos = txt_topicComandos.Text.Trim();
+            await ConnectionMQTT.Instancia.Disconnect();
+            BloquearTextBoxs(false);
+            conexionCerrada = true;
         }
+
+        private void BloquearTextBoxs(bool bloquar)
+        {
+            //
+            txtClusterUrl.IsEnabled = bloquar;
+            txtPort.IsEnabled = bloquar;
+            txtUsername.IsEnabled = bloquar;
+            txtPassword.IsEnabled = bloquar;
+
+            // si se esta bloqueando, entonces debe estar conectado
+            if (bloquar) {
+                btnConectarMqtt.Visibility = Visibility.Hidden;
+                btnDesconectarMqtt.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                btnDesconectarMqtt.Visibility = Visibility.Hidden;
+                btnConectarMqtt.Visibility = Visibility.Visible;
+            }
+        }
+
+        private void btn_cerrar_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
+        }
+
     }
 }
