@@ -152,7 +152,10 @@ namespace Presentation
                     });
                 }
 
-                cts?.Cancel();
+                if (cts != null)
+                {
+                    cts?.Cancel();
+                }
                 await Task.Run(() => ArduinoControl.Instancia.Disconnect());
             }
             catch (Exception innerEx)
@@ -174,7 +177,9 @@ namespace Presentation
             catch (Exception ex)
             {
                 Debug.WriteLine($"Error en la recopilación de datos: {ex.Message}");
-                cts?.Cancel();
+                if (cts != null) { 
+                    cts?.Cancel();
+                }
                 await ConnectionMQTT.Instancia.Disconnect();
                 await Dispatcher.InvokeAsync(async () =>
                 {
