@@ -96,7 +96,10 @@ namespace Presentation
             {
                 if (!EmergenteWindow.conexionCerrada && !ventanaCerrada)
                 {
-                    await InterfazDesconetada();
+                    await Dispatcher.InvokeAsync(async () =>
+                    {
+                        await InterfazDesconetada();
+                    });
                 }
             }
         }
@@ -179,7 +182,11 @@ namespace Presentation
             {
                 cts?.Cancel();
                 ArduinoControl.Instancia.Disconnect();
-                await InterfazDesconetada();
+                await Dispatcher.InvokeAsync(async () =>
+                {
+                    await InterfazDesconetada();
+                });
+                
             }
         }
 
@@ -245,6 +252,10 @@ namespace Presentation
                     { // si el buzzer no ha sido apagado
                         await EstadoBuzzer(true);
                     }
+                    else
+                    { // si el buzzer ha sido apagado
+                        await EstadoBuzzer(false);
+                    }
                 }
                 else
                 {
@@ -267,13 +278,20 @@ namespace Presentation
                 // agregar codigo para verificar con que tipo de conexion se desea trabajar
                 if (botonEstado == "PUSH_ON")
                 {
-                    Debug.WriteLine("REGANDO - POR BOTON");
+                    Debug.WriteLine("BOTON PRESIONADO - REGANDO");
                     await ArduinoControl.Instancia.Regar(true);
+                    if (!apagarBuzzer)
+                    { // si el buzzer no ha sido apagado
+                        await EstadoBuzzer(true);
+                    }
+                    else
+                    { // si el buzzer ha sido apagado
+                        await EstadoBuzzer(false);
+                    }
                     elip_riego.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF13D9FF"));
                 }
                 else
                 {
-                    Debug.WriteLine("NO REGANDO - POR BOTON");
                     await ArduinoControl.Instancia.Regar(false);
                     elip_riego.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF808080"));
                 }
@@ -326,7 +344,7 @@ namespace Presentation
         }
 
 
-        private async Task InterfazDesconetada()
+        public async Task InterfazDesconetada()
         {
             try
             {
@@ -413,7 +431,7 @@ namespace Presentation
         #region Eventos
 
         // evento click para abrir la ventana de tipo de conexion
-        private void btn_seleccionarConexion_Click(object sender, RoutedEventArgs e)
+        private async void btn_seleccionarConexion_Click(object sender, RoutedEventArgs e)
         {
             SeleccionWorkspace tipoConexion = new SeleccionWorkspace();
             tipoConexion.ShowDialog();
@@ -436,6 +454,10 @@ namespace Presentation
             }
             else
             {
+                await Dispatcher.InvokeAsync(async () =>
+                {
+                    await InterfazDesconetada();
+                });
                 panel_btn_puertos.Visibility = Visibility.Hidden;
                 panel_btn_mqtt.Visibility = Visibility.Hidden;
             }
@@ -451,6 +473,13 @@ namespace Presentation
             if (ArduinoControl.Instancia.IsConnected)
             {
                 await RecolectarDatos_Arduino();
+            }
+            else
+            {
+                await Dispatcher.InvokeAsync(async () =>
+                {
+                    await InterfazDesconetada();
+                });
             }
 
         }

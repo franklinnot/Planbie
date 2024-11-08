@@ -117,38 +117,28 @@ namespace Presentation.Logica
         // metodo para activar o encender el buzzer
         public async Task EstadoBuzzer(bool estado)
         {
-            string command = estado ? "ENCENDER_BUZZER" : "APAGAR_BUZZER";
+            string command = estado ? "BUZZER_ON" : "BUZZER_OFF";
             await EnviarComando(command);
         }
 
         // metodo para indicar en que estado debe estar el led
         public async Task EstadoLed(string estado)
         {
-            string command = estado switch
-            {
-                "CORRECTO" => "LED_VERDE",
-                "REGAR" => "LED_CELESTE",
-                "PELIGRO" => "LED_ROJO",
-                _ => throw new ArgumentException("Estado de LED no válido", nameof(estado))
-            };
-
-            await EnviarComando(command);
+            await EnviarComando(estado);
         }
 
         // metodo usado cuando la temperatura sea muy alta y la humedad muy baja
         public async Task EstadoPeligro(bool peligro)
         {
-            await EstadoLed(peligro ? "PELIGRO" : "CORRECTO");
             await Regar(peligro);
         }
 
         // metodo para activar o apagar la bomba de agua
         public async Task Regar(bool decision)
         {
-            string command = decision ? "REGAR" : "NO_REGAR";
+            string command = decision ? "REGAR_ON" : "REGAR_OFF";
             await EnviarComando(command);
-            await EstadoBuzzer(decision);
-            await EstadoLed(decision ? "CORRECTO" : "PELIGRO");
+            await EstadoLed(decision ? "RGB_BLUE" : "RGB_VERDE");
         }
 
 
