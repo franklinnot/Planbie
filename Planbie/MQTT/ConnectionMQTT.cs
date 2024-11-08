@@ -196,6 +196,33 @@ namespace MQTT
         }
 
 
+        // metodo para activar o encender el buzzer
+        public async Task EstadoBuzzer(bool estado)
+        {
+            string command = estado ? "BUZZER_ON" : "BUZZER_OFF";
+            await Publish(command);
+        }
+
+        // metodo para indicar en que estado debe estar el led
+        public async Task EstadoLed(string estado)
+        {
+            await Publish(estado);
+        }
+
+        // metodo usado cuando la temperatura sea muy alta y la humedad muy baja
+        public async Task EstadoPeligro(bool peligro)
+        {
+            await Regar(peligro);
+        }
+
+        // metodo para activar o apagar la bomba de agua
+        public async Task Regar(bool decision)
+        {
+            string command = decision ? "REGAR_ON" : "REGAR_OFF";
+            await Publish(command);
+            await EstadoLed(decision ? "RGB_BLUE" : "RGB_VERDE");
+        }
+
 
     }
 }

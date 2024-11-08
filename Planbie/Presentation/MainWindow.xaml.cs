@@ -59,6 +59,7 @@ namespace Presentation
                 await Dispatcher.InvokeAsync(async () =>
                 {
                     await AgregarTemperaturaGrafico(data);
+                    
                 });
             }
         }
@@ -71,6 +72,7 @@ namespace Presentation
             var labels = temperatureChart.AxisX[0].Labels as List<string> ?? new List<string>();
             labels.Add(data.Fecha.ToString("g"));
             temperatureChart.AxisX[0].Labels = labels;
+
         }
 
         #endregion
@@ -130,7 +132,6 @@ namespace Presentation
         private async Task RecolectarDatos_MQTT()
         {
             cts = new CancellationTokenSource(); // se inicializa el cts para recibir solicitudes de cancelacion;
-
             ConnectionMQTT.Instancia.OnDataReceived += ProcesarData;
 
             try
@@ -140,9 +141,12 @@ namespace Presentation
             catch (Exception ex)
             {
                 Debug.WriteLine($"Error en la recopilación de datos: {ex.Message}");
-                //cts?.Cancel();
-                //await ConnectionMQTT.Instancia.Disconnect();
-                //InterfazDesconetada();
+                cts?.Cancel();
+                await ConnectionMQTT.Instancia.Disconnect();
+                await Dispatcher.InvokeAsync(async () =>
+                {
+                    await InterfazDesconetada();
+                });
             }
         }
 
@@ -161,6 +165,7 @@ namespace Presentation
                 int humedad = data["humedad"].Value<int>();
                 string estado_boton = data["boton"].ToString();
                 // variable temporal para almacenar los datos  de la temperatura
+
                 var dataTemporal = new TempData
                 {
                     Fecha = DateTime.Now,
@@ -169,19 +174,24 @@ namespace Presentation
 
                 // metodos asincronos por el hecho de tener que recibir datos desde un dispositivo externo
                 // y tambien por modificar el archivo json
-                await RegistrarTemperaturaJson(dataTemporal);
                 await Dispatcher.InvokeAsync(async () =>
                 {
-                    await NotificarAlertas(temperatura, humedad, estado_boton);
+                    await RegistrarTemperaturaJson(dataTemporal);
+                    await AgregarTemperaturaGrafico(dataTemporal);
                     await ActualizarInterfaz(dataTemporal, humedad);
+                    await NotificarAlertas(temperatura, humedad, estado_boton);
                 });
-
 
             }
             catch
             {
                 cts?.Cancel();
-                ArduinoControl.Instancia.Disconnect();
+                if (SeleccionWorkspace.workspace == "ARDUINO" && ArduinoControl.Instancia.IsConnected) {
+                    ArduinoControl.Instancia.Disconnect();
+                }
+                else if (SeleccionWorkspace.workspace == "MQTT" && ConnectionMQTT.Instancia.IsConnected) {
+                    await ConnectionMQTT.Instancia.Disconnect();
+                }
                 await Dispatcher.InvokeAsync(async () =>
                 {
                     await InterfazDesconetada();
@@ -214,32 +224,32 @@ namespace Presentation
 
                 if (temperatura >= 40)
                 {
-                    elip_temperatura.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFF1349"));
+                    elip_temperatura.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFF1349")); // rojo
                 }
                 else if (temperatura >= 30 && temperatura < 40)
                 {
-                    elip_temperatura.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFD613"));
+                    elip_temperatura.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFD613")); // amarillo
                 }
                 else
                 {
-                    elip_temperatura.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF00ff77"));
+                    elip_temperatura.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF00ff77")); // verde
                 }
 
                 // led de humedad
                 if (humedad >= 70)
                 {
-                    elip_humedad.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF00ff77"));
+                    elip_humedad.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF00ff77")); // verde
                 }
-                else if (temperatura >= 60 && temperatura < 70)
+                else if (humedad >= 60 && humedad < 70)
                 {
-                    elip_humedad.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFD613"));
+                    elip_humedad.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFD613")); // amarillo
                 }
                 else
                 {
-                    elip_humedad.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFF1349"));
+                    elip_humedad.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFF1349")); // rojo
                 }
 
-            if (SeleccionWorkspace.workspace == "ARDUINO")
+            if (SeleccionWorkspace.workspace == "ARDUINO" && ArduinoControl.Instancia.IsConnected)
             {
                 // notificamos la alerta
                 if (temperatura >= 40 && humedad < 60)
@@ -262,6 +272,34 @@ namespace Presentation
                     elip_riego.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF808080"));
                     alertaDetectada = false;
                     await ArduinoControl.Instancia.EstadoPeligro(false);
+                    // solo si la alerta no ha sido enviada, se evaluara el estado del boton manual de riego
+                    await EstadoBotonRiego(estado_boton);
+                    await EstadoBuzzer(false);
+                }
+            }
+            else if (SeleccionWorkspace.workspace == "MQTT" && ConnectionMQTT.Instancia.IsConnected)
+            {
+                // notificamos la alerta
+                if (temperatura >= 40 && humedad < 60)
+                {
+                    Debug.WriteLine("ALERTA: Alta temperatura y baja humedad.");
+                    elip_riego.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF13D9FF")); // celeste
+                    alertaDetectada = true;
+                    await ConnectionMQTT.Instancia.EstadoPeligro(true);
+                    if (!apagarBuzzer)
+                    { // si el buzzer no ha sido apagado
+                        await EstadoBuzzer(true);
+                    }
+                    else
+                    { // si el buzzer ha sido apagado
+                        await EstadoBuzzer(false);
+                    }
+                }
+                else
+                {
+                    elip_riego.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF808080")); // gris
+                    alertaDetectada = false;
+                    await ConnectionMQTT.Instancia.EstadoPeligro(false);
                     // solo si la alerta no ha sido enviada, se evaluara el estado del boton manual de riego
                     await EstadoBotonRiego(estado_boton);
                     await EstadoBuzzer(false);
@@ -296,20 +334,57 @@ namespace Presentation
                     elip_riego.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF808080"));
                 }
             }
+            else if (ConnectionMQTT.Instancia.IsConnected)
+            {
+                // agregar codigo para verificar con que tipo de conexion se desea trabajar
+                if (botonEstado == "PUSH_ON")
+                {
+                    Debug.WriteLine("BOTON PRESIONADO - REGANDO");
+                    await ConnectionMQTT.Instancia.Regar(true);
+                    if (!apagarBuzzer)
+                    { // si el buzzer no ha sido apagado
+                        await EstadoBuzzer(true);
+                    }
+                    else
+                    { // si el buzzer ha sido apagado
+                        await EstadoBuzzer(false);
+                    }
+                    elip_riego.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF13D9FF"));
+                }
+                else
+                {
+                    await ArduinoControl.Instancia.Regar(false);
+                    elip_riego.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF808080"));
+                }
+            }
             
         }
 
         private async Task EstadoBuzzer(bool encender)
         {
-            if (encender && !buzzerEncendido)
-            {
-                await ArduinoControl.Instancia.EstadoBuzzer(true);
-                buzzerEncendido = true;
+            if (SeleccionWorkspace.workspace == "ARDUINO" && ArduinoControl.Instancia.IsConnected) {
+                if (encender && !buzzerEncendido)
+                {
+                    await ArduinoControl.Instancia.EstadoBuzzer(true);
+                    buzzerEncendido = true;
+                }
+                else if (!encender && buzzerEncendido)
+                {
+                    await ArduinoControl.Instancia.EstadoBuzzer(false);
+                    buzzerEncendido = false;
+                }
             }
-            else if (!encender && buzzerEncendido)
-            {
-                await ArduinoControl.Instancia.EstadoBuzzer(false);
-                buzzerEncendido = false;
+            else if (SeleccionWorkspace.workspace == "MQTT" && ConnectionMQTT.Instancia.IsConnected) {
+                if (encender && !buzzerEncendido)
+                {
+                    await ConnectionMQTT.Instancia.EstadoBuzzer(true);
+                    buzzerEncendido = true;
+                }
+                else if (!encender && buzzerEncendido)
+                {
+                    await ConnectionMQTT.Instancia.EstadoBuzzer(false);
+                    buzzerEncendido = false;
+                }
             }
         }
 
@@ -319,23 +394,10 @@ namespace Presentation
             try
             {
                 // Actualizar el valor de la humedad
-                await Dispatcher.InvokeAsync(() =>
-                {
-                    control_humedad.Value = humedad;
-                });
-
-                // Actualizar el valor y el texto de la temperatura
-                await Dispatcher.InvokeAsync(() =>
-                {
-                    control_temperatura.Value = temp.Temperatura;
-                    control_temperatura.Text = $"{temp.Temperatura}°C";
-                });
-
-                // Llamar al método para agregar temperatura al gráfico
-                await Dispatcher.InvokeAsync(async () =>
-                {
-                    await AgregarTemperaturaGrafico(temp);
-                });
+                control_humedad.Value = humedad;
+                control_temperatura.Value = temp.Temperatura;
+                control_temperatura.Text = $"{temp.Temperatura}°C";
+                await AgregarTemperaturaGrafico(temp);
             }
             catch (Exception ex)
             {
@@ -369,7 +431,6 @@ namespace Presentation
                 Debug.WriteLine(ex);
             }
         }
-
 
         #endregion
 
@@ -442,7 +503,6 @@ namespace Presentation
                 string worspace = SeleccionWorkspace.workspace;
                 if (worspace == "ARDUINO")
                 {
-                    
                     panel_btn_mqtt.Visibility = Visibility.Hidden;
                     panel_btn_puertos.Visibility = Visibility.Visible;
                 }
@@ -495,13 +555,20 @@ namespace Presentation
             {
                 await RecolectarDatos_MQTT();
             }
+            else
+            {
+                await Dispatcher.InvokeAsync(async () =>
+                {
+                    await InterfazDesconetada();
+                });
+            }
             // agregar codigo para verificar si se desconecto dandole click al boton, si es aso llamar al metodo de interfaz desconectada con el dispatcher
         }
 
         // evento click para apagar el buzzer
         private async void btnApagarBuzzer_Click(object sender, RoutedEventArgs e)
         {
-            if (ArduinoControl.Instancia.IsConnected)
+            if (SeleccionWorkspace.workspace == "ARDUINO" && ArduinoControl.Instancia.IsConnected)
             {
                 apagarBuzzer = !apagarBuzzer; // cada que haga click, se alterna su estadop
 
@@ -522,7 +589,28 @@ namespace Presentation
                         await EstadoBuzzer(true);
                     }
                 }
+            }
+            else if (SeleccionWorkspace.workspace == "MQTT" && ConnectionMQTT.Instancia.IsConnected)
+            {
+                apagarBuzzer = !apagarBuzzer; // cada que haga click, se alterna su estadop
 
+                if (apagarBuzzer)
+                {
+                    // si ha sido detectada una alerta significa que le buzzer esta prendido
+                    // por lo tanto, al darle click a este boton, lo apagara
+                    Debug.WriteLine("Buzzer apagado manualmente");
+                    await EstadoBuzzer(false);
+                    MessageBox.Show("El buzzer permanecerá apagado.");
+                }
+                else
+                {
+                    Debug.WriteLine("Buzzer encendido manualmente");
+                    // si se vuelve a activar el buzzer manualmente, respeta las alertas actuales
+                    if (alertaDetectada)
+                    {
+                        await EstadoBuzzer(true);
+                    }
+                }
             }
         }
 
