@@ -32,7 +32,12 @@ namespace Presentation.Logica
 
                 // desearilzamos el json a una lista de objetos TemData
                 var registros = JsonConvert.DeserializeObject<List<TempData>>(jsonData) ?? new List<TempData>();
-                return registros;
+
+                DateTime tiempoLimite = DateTime.Now.AddHours(-1);
+
+                var registrosFiltrados = registros.Where(r => r.Fecha > tiempoLimite).ToList();
+
+                return registrosFiltrados;
             }
             catch (Exception ex)
             {
@@ -40,6 +45,7 @@ namespace Presentation.Logica
                 return new List<TempData>(); // Si hay un error, restorna una lista vacia
             }
         }
+
 
         // registra una nuevo objeto de Temperatura en el Json
         public static async Task RegistrarTemperaturaJson(TempData nuevoRegistro)

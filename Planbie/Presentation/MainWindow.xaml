@@ -443,8 +443,9 @@
                         HorizontalAlignment="Center"
                         FontSize="14"
                         Foreground="#FFDEDEDE"
-                        Text="Temperatura promedio en las 2 últimas horas " />
+                        Text="Temperatura promedio en la última hora:" />
                     <TextBlock
+                        x:Name="promedio_temperatura"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Top"
                         FontSize="24"

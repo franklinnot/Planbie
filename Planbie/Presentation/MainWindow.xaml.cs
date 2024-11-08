@@ -62,6 +62,14 @@ namespace Presentation
                     
                 });
             }
+
+            await Dispatcher.InvokeAsync(async () =>
+            {
+                await ActualizarPromedioTemperatura();
+
+            });
+            
+
         }
 
         public async Task AgregarTemperaturaGrafico(TempData data)
@@ -73,6 +81,31 @@ namespace Presentation
             labels.Add(data.Fecha.ToString("g"));
             temperatureChart.AxisX[0].Labels = labels;
 
+
+
+        }
+
+        public static async Task<int> CalcularPromedioTemperatura(List<TempData> datos)
+        {
+            // Verifica que la lista no esté vacía para evitar errores al calcular el promedio
+            if (datos == null || datos.Count == 0)
+            {
+                return 0; // Retorna 0 si no hay datos
+            }
+
+            // Calcula el promedio de la propiedad Temperatura y redondea al entero más cercano
+            int promedio = (int)Math.Round(datos.Average(d => d.Temperatura));
+
+            return promedio;
+        }
+
+
+        private async Task ActualizarPromedioTemperatura() {
+            List<TempData> registros = await Json.LeerDatosJson();
+            await Dispatcher.InvokeAsync(async () =>
+            {
+                promedio_temperatura.Text = $"{await CalcularPromedioTemperatura(registros)}°C";
+            });
         }
 
         #endregion
@@ -177,8 +210,8 @@ namespace Presentation
                 await Dispatcher.InvokeAsync(async () =>
                 {
                     await RegistrarTemperaturaJson(dataTemporal);
-                    await AgregarTemperaturaGrafico(dataTemporal);
                     await ActualizarInterfaz(dataTemporal, humedad);
+                    await ActualizarPromedioTemperatura();
                     await NotificarAlertas(temperatura, humedad, estado_boton);
                 });
 

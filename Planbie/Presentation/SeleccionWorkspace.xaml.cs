@@ -20,7 +20,6 @@ namespace Presentation
             }
         }
 
-
         private void btnMqtt_Click(object sender, RoutedEventArgs e)
         {
             EstablecerTipoConexion("MQTT");
