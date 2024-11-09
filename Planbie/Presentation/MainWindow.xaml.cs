@@ -116,10 +116,10 @@ namespace Presentation
         private async Task RecolectarDatos_Arduino()
         {
             cts = new CancellationTokenSource();
+            ArduinoControl.Instancia.OnDataReceived += ProcesarData;
 
             try
             {
-                ArduinoControl.Instancia.OnDataReceived += ProcesarData;
                 await ArduinoControl.Instancia.ObtenerDatos(cts.Token);
             }
             catch (Exception ex)
