@@ -127,16 +127,16 @@ namespace Presentation
                 Debug.WriteLine($"Error en la recopilación de datos: {ex.Message}");
                 await ManejarErrorConexion(ex);
             }
-            finally
-            {
-                if (!EmergenteWindow.conexionCerrada && !ventanaCerrada)
-                {
-                    await Dispatcher.InvokeAsync(async () =>
-                    {
-                        await InterfazDesconetada();
-                    });
-                }
-            }
+            //finally
+            //{
+            //    if (!EmergenteWindow.conexionCerrada && !ventanaCerrada) // si la conexion no ha sido cerrada y la ventana no ha sido cerrada
+            //    {
+            //        await Dispatcher.InvokeAsync(async () =>
+            //        {
+            //            await InterfazDesconetada();
+            //        });
+            //    }
+            //}
         }
 
         private async Task ManejarErrorConexion(Exception ex)
@@ -157,6 +157,11 @@ namespace Presentation
                     cts?.Cancel();
                 }
                 await Task.Run(() => ArduinoControl.Instancia.Disconnect());
+
+                await Dispatcher.InvokeAsync(async () =>
+                {
+                    await InterfazDesconetada();
+                });
             }
             catch (Exception innerEx)
             {

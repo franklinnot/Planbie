@@ -108,6 +108,7 @@ namespace Presentation.Logica
                     await EnviarComando("RECOLECTAR_DATOS");
                     await Task.Delay(5000, token); // se enviara este comando cada 5 segundos
                 }
+                Debug.WriteLine("El token de ejuucion fue cancelado.");
             }
             else
             {
