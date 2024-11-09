@@ -92,9 +92,19 @@ namespace Presentation.Logica
         {
             if (!IsConnected)
                 throw new InvalidOperationException("El puerto serie no está abierto.");
-              
-            await Task.Run(() => _serialPort.WriteLine(command));
-            Debug.WriteLine($"Mensaje publicado en {Port}: {command}");
+            try
+            {
+                await Task.Run(() => _serialPort.WriteLine(command));
+                Debug.WriteLine($"Mensaje publicado en {Port}: {command}");
+            }
+            catch
+            {
+                Debug.WriteLine($"Error al publicar: No se pudo enviar el comando: {command}");
+                if (MainWindow.cts != null) {
+                    MainWindow.cts?.Cancel();
+                }
+                Disconnect();
+            }
         }
 
         // metodo que devuelve el json con los datos quue el arduino devuelve ya serializados

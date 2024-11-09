@@ -20,7 +20,6 @@ namespace Presentation
         bool apagarBuzzer = false; // ayuda a verificar si se ha dado click en el boton del buzzer para que este este apagado o encendido
         bool alertaDetectada = false; // false para cuando no hay alertas y true para cuando si las hay
         bool buzzerEncendido = false; // una variable que ayuda a verificar si el buzzer esta encendido
-        bool ventanaCerrada = false;
         private System.Timers.Timer mqttTimer;
         private bool disposed = false;
 
@@ -127,46 +126,7 @@ namespace Presentation
                 Debug.WriteLine($"Error en la recopilación de datos: {ex.Message}");
                 await ManejarErrorConexion(ex);
             }
-            //finally
-            //{
-            //    if (!EmergenteWindow.conexionCerrada && !ventanaCerrada) // si la conexion no ha sido cerrada y la ventana no ha sido cerrada
-            //    {
-            //        await Dispatcher.InvokeAsync(async () =>
-            //        {
-            //            await InterfazDesconetada();
-            //        });
-            //    }
-            //}
-        }
-
-        private async Task ManejarErrorConexion(Exception ex)
-        {
-            try
-            {
-                if (!EmergenteWindow.conexionCerrada && !ventanaCerrada)
-                {
-                    await Dispatcher.InvokeAsync(() =>
-                    {
-                        MessageBox.Show($"Ha sucedido un error al establecer comunicación con el dispositivo: {ex.Message}");
-                        MessageBox.Show("La recolección de datos del ArduinoControl ha culminado.");
-                    });
-                }
-
-                if (cts != null)
-                {
-                    cts?.Cancel();
-                }
-                await Task.Run(() => ArduinoControl.Instancia.Disconnect());
-
-                await Dispatcher.InvokeAsync(async () =>
-                {
-                    await InterfazDesconetada();
-                });
-            }
-            catch (Exception innerEx)
-            {
-                Debug.WriteLine($"Error al manejar la desconexión: {innerEx.Message}");
-            }
+            
         }
 
         // si se trabaja con un broker mqtt, se usara este metodo
@@ -182,14 +142,71 @@ namespace Presentation
             catch (Exception ex)
             {
                 Debug.WriteLine($"Error en la recopilación de datos: {ex.Message}");
-                if (cts != null) { 
-                    cts?.Cancel();
-                }
-                await ConnectionMQTT.Instancia.Disconnect();
-                await Dispatcher.InvokeAsync(async () =>
+                await ManejarErrorConexion(ex);
+            }
+        }
+
+        // metodo para manejar los errores en la conexion de ambos tipos
+        private async Task ManejarErrorConexion(Exception ex)
+        {
+            if (SeleccionWorkspace.workspace == "ARDUINO")
+            {
+                try
                 {
-                    await InterfazDesconetada();
-                });
+                    // si la conexion no ha sido cerrada MANUALMENTE
+                    if (!EmergenteWindow.conexionCerrada)
+                    {
+                        await Dispatcher.InvokeAsync(() =>
+                        {
+                            MessageBox.Show($"Ha sucedido un error al establecer comunicación con el dispositivo: {ex.Message}");
+                            MessageBox.Show("La recolección de datos del ArduinoControl ha culminado.");
+                        });
+                    }
+
+                    if (cts != null)
+                    {
+                        cts?.Cancel();
+                    }
+                    await Task.Run(() => ArduinoControl.Instancia.Disconnect());
+
+                    await Dispatcher.InvokeAsync(async () =>
+                    {
+                        await InterfazDesconetada();
+                    });
+                }
+                catch (Exception innerEx)
+                {
+                    Debug.WriteLine($"Error al manejar la desconexión: {innerEx.Message}");
+                }
+            }
+            else if (SeleccionWorkspace.workspace == "MQTT") {
+                try
+                {
+                    // si la conexion no ha sido cerrada MANUALMENTE
+                    if (!BrokerCluster.conexionCerrada)
+                    {
+                        await Dispatcher.InvokeAsync(() =>
+                        {
+                            MessageBox.Show($"Ha sucedido un error al establecer comunicación con el broker: {ex.Message}");
+                            MessageBox.Show("La recolección de datos del Broker ha culminado.");
+                        });
+                    }
+
+                    if (cts != null)
+                    {
+                        cts?.Cancel();
+                    }
+                    await Task.Run(() => ConnectionMQTT.Instancia.Disconnect());
+
+                    await Dispatcher.InvokeAsync(async () =>
+                    {
+                        await InterfazDesconetada();
+                    });
+                }
+                catch (Exception innerEx)
+                {
+                    Debug.WriteLine($"Error al manejar la desconexión: {innerEx.Message}");
+                }
             }
         }
 
@@ -477,6 +494,7 @@ namespace Presentation
 
         #endregion
 
+        #region Metodos para liberar memoria
         protected virtual void Dispose(bool disposing)
         {
             if (!disposed)
@@ -513,7 +531,6 @@ namespace Presentation
         {
             try
             {
-                ventanaCerrada = true;
                 if (cts != null)
                 {
                     await Task.Run(() => cts.Cancel());
@@ -531,6 +548,7 @@ namespace Presentation
                 Debug.WriteLine($"Error al cerrar la aplicación: {ex.Message}");
             }
         }
+        #endregion
 
         #region Eventos
 
@@ -683,7 +701,6 @@ namespace Presentation
         #endregion
 
         #endregion
-
 
     }
 }
