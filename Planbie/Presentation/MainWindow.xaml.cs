@@ -357,7 +357,7 @@ namespace Presentation
         {
             if (ArduinoControl.Instancia.IsConnected) { 
                 // agregar codigo para verificar con que tipo de conexion se desea trabajar
-                if (botonEstado == "PUSH_ON")
+                if (botonEstado == "REGAR_ON")
                 {
                     Debug.WriteLine("BOTON PRESIONADO - REGANDO");
                     await ArduinoControl.Instancia.Regar(true);
@@ -380,7 +380,7 @@ namespace Presentation
             else if (ConnectionMQTT.Instancia.IsConnected)
             {
                 // agregar codigo para verificar con que tipo de conexion se desea trabajar
-                if (botonEstado == "PUSH_ON")
+                if (botonEstado == "REGAR_ON")
                 {
                     Debug.WriteLine("BOTON PRESIONADO - REGANDO");
                     await ConnectionMQTT.Instancia.Regar(true);
