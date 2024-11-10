@@ -185,7 +185,8 @@ namespace MQTT
                 while (!token.IsCancellationRequested)
                 {
                     // enviar comando para recoger datos
-                    await Publish("RECOLECTAR_DATOS");
+                    string recolect = "RECOLECTAR_DATOS";
+                    await Publish(recolect);
                     await Task.Delay(5000, token); // se enviara este comando cada 5 segundos
                 }
             }
