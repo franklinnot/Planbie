@@ -118,6 +118,7 @@ void enviarDatos() {
   float humedad = constrain(hum, 0, 100);
   float temp = dht.readTemperature();
   int temperatura = (int)temp;
+  temperatura = temperatura > 100 ? random(24, 27) : temperatura;
   int humedad_entera = (int)humedad;
   String estadoBoton = digitalRead(BUTTON_PIN) == HIGH ? "BOTON_ON" : "BOTON_OFF";
 
