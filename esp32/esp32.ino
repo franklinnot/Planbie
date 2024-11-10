@@ -79,7 +79,7 @@ void reconnect() {
     }
   }
 }
-
+//Para cuando se recibe algo(Solo comandos, recolectar datos, leds y regar)
 void mqttCallback(char* topic, byte* payload, unsigned int length) {
   String message;
   for (int i = 0; i < length; i++) {
@@ -87,6 +87,13 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   }
   comandoActual = message;
   procesarComando(comandoActual);
+}
+
+void serialEvent() {
+    if (Serial.available()) {
+        comandoActual = Serial.readStringUntil('\n');
+        procesarComando(comandoActual);
+    }
 }
 
 void loop() {
