@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.IO.Ports;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Presentation.Logica
@@ -76,10 +77,14 @@ namespace Presentation.Logica
         }
 
         // Método para cerrar la conexión
-        public void Disconnect()
+        public async void Disconnect()
         {
             if (_serialPort != null && _serialPort.IsOpen)
             {
+                await Regar(false);
+                await EstadoLed("RGB_OFF");
+                await EstadoBuzzer(false);
+
                 _serialPort.Close();
 
                 Port = string.Empty;

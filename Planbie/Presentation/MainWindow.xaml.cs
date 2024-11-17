@@ -21,6 +21,8 @@ namespace Presentation
         bool alertaDetectada = false; // false para cuando no hay alertas y true para cuando si las hay
         bool buzzerEncendido = false; // una variable que ayuda a verificar si el buzzer esta encendido
         private System.Timers.Timer mqttTimer;
+        bool botonRegar = false;
+        TempData ultimoRegistro = new TempData();
         private bool disposed = false;
 
         public MainWindow()
@@ -31,8 +33,9 @@ namespace Presentation
         }
 
         #region cargar los registros de temperaturas del json en el grafico temp/tiempo y configurarlo
-        private async void CargaInicialDatosJson()
+        private async Task CargaInicialDatosJson()
         {
+            temperatureValues = new ChartValues<int>();
             // Configuracion inicial del grafico
             temperatureChart.Series = new SeriesCollection
             {
@@ -53,13 +56,17 @@ namespace Presentation
 
             List<TempData> registros = await Json.LeerDatosJson();
             // cargar los valores iniciales del grafico
+            int c = 0;
             foreach (TempData data in registros)
             {
+                ultimoRegistro = c == 0 ? data : ultimoRegistro;
                 await Dispatcher.InvokeAsync(async () =>
                 {
                     await AgregarTemperaturaGrafico(data);
                     
                 });
+                
+                c++;
             }
 
             await Dispatcher.InvokeAsync(async () =>
@@ -67,8 +74,6 @@ namespace Presentation
                 await ActualizarPromedioTemperatura();
 
             });
-            
-
         }
 
         public async Task AgregarTemperaturaGrafico(TempData data)
@@ -224,6 +229,7 @@ namespace Presentation
                 int temperatura = data["temperatura"].Value<int>();
                 int humedad = data["humedad"].Value<int>();
                 string estado_boton = data["boton"].ToString();
+                botonRegar = estado_boton == "BOTON_ON" ? true : false;
                 // variable temporal para almacenar los datos  de la temperatura
 
                 var dataTemporal = new TempData
@@ -334,7 +340,9 @@ namespace Presentation
                     await ArduinoControl.Instancia.EstadoPeligro(false);
                     // solo si la alerta no ha sido enviada, se evaluara el estado del boton manual de riego
                     await EstadoBotonRiego(estado_boton);
-                    await EstadoBuzzer(false);
+                    if (estado_boton != "BOTON_ON") { 
+                        await EstadoBuzzer(false);
+                    }
                 }
             }
             else if (SeleccionWorkspace.workspace == "MQTT" && ConnectionMQTT.Instancia.IsConnected)
@@ -361,8 +369,15 @@ namespace Presentation
                     alertaDetectada = false;
                     await ConnectionMQTT.Instancia.EstadoPeligro(false);
                     // solo si la alerta no ha sido enviada, se evaluara el estado del boton manual de riego
+                    if (estado_boton != "BOTON_ON")
+                    {
+                        await Dispatcher.InvokeAsync(async () =>
+                        {
+                            await EstadoBuzzer(false);
+                            Debug.WriteLine("Sin emergencia - buzzer apagado");
+                        });
+                    }
                     await EstadoBotonRiego(estado_boton);
-                    await EstadoBuzzer(false);
                 }
             }
         }
@@ -457,7 +472,13 @@ namespace Presentation
                 control_humedad.Value = humedad;
                 control_temperatura.Value = temp.Temperatura;
                 control_temperatura.Text = $"{temp.Temperatura}°C";
-                await AgregarTemperaturaGrafico(temp);
+                if (temp.Fecha.AddMinutes(-4) > ultimoRegistro.Fecha) {
+                    await CargaInicialDatosJson();
+                }
+                else
+                {
+                    await AgregarTemperaturaGrafico(temp);
+                }
             }
             catch (Exception ex)
             {
@@ -485,6 +506,8 @@ namespace Presentation
                 {
                     elip_riego.Fill = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF808080"));
                 });
+                alertaDetectada = false;
+                apagarBuzzer = false;
             }
             catch (Exception ex)
             {
@@ -638,16 +661,24 @@ namespace Presentation
                     // si ha sido detectada una alerta significa que le buzzer esta prendido
                     // por lo tanto, al darle click a este boton, lo apagara
                     Debug.WriteLine("Buzzer apagado manualmente");
-                    await EstadoBuzzer(false);
+    
+                    await Dispatcher.InvokeAsync(async () =>
+                    {
+                        await EstadoBuzzer(false);
+                    });
+
                     MessageBox.Show("El buzzer permanecerá apagado.");
                 }
                 else
                 {
                     Debug.WriteLine("Buzzer encendido manualmente");
                     // si se vuelve a activar el buzzer manualmente, respeta las alertas actuales
-                    if (alertaDetectada)
+                    if (alertaDetectada || botonRegar)
                     {
-                        await EstadoBuzzer(true);
+                        await Dispatcher.InvokeAsync(async () =>
+                        {
+                            await EstadoBuzzer(true);
+                        });
                     }
                 }
             }
@@ -660,16 +691,22 @@ namespace Presentation
                     // si ha sido detectada una alerta significa que le buzzer esta prendido
                     // por lo tanto, al darle click a este boton, lo apagara
                     Debug.WriteLine("Buzzer apagado manualmente");
-                    await EstadoBuzzer(false);
+                    await Dispatcher.InvokeAsync(async () =>
+                    {
+                        await EstadoBuzzer(false);
+                    });
                     MessageBox.Show("El buzzer permanecerá apagado.");
                 }
                 else
                 {
                     Debug.WriteLine("Buzzer encendido manualmente");
                     // si se vuelve a activar el buzzer manualmente, respeta las alertas actuales
-                    if (alertaDetectada)
+                    if (alertaDetectada || botonRegar)
                     {
-                        await EstadoBuzzer(true);
+                        await Dispatcher.InvokeAsync(async () =>
+                        {
+                            await EstadoBuzzer(true);
+                        });
                     }
                 }
             }

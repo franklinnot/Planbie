@@ -77,6 +77,11 @@ namespace MQTT
             {
                 try
                 {
+
+                    await Regar(false);
+                    await EstadoLed("RGB_OFF");
+                    await EstadoBuzzer(false);
+
                     await client.DisconnectAsync().ConfigureAwait(false);
                     Debug.WriteLine("Desconectado satisfactoriamente.");
                     resultado = true;

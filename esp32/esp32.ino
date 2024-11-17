@@ -2,16 +2,16 @@
 #include <ArduinoJson.h>
 #include <PubSubClient.h>
 #include <WiFi.h>
-#include <WiFiClientSecure.h> // Cliente seguro para conexión TLS
+#include <WiFiClientSecure.h>
 
 #define DHTPIN 15
 #define DHTTYPE DHT11
 
 DHT dht(DHTPIN, DHTTYPE);
 
-const int BUTTON_PIN = 13;  // boton
-const int RELAY = 4;        // motor de agua
-const int BUZZER = 25;      // buzzer
+const int BUTTON_PIN = 13;
+const int RELAY = 4;
+const int BUZZER = 25;
 const int LED_RGB_R = 26;
 const int LED_RGB_G = 27;
 const int LED_RGB_B = 14;
@@ -30,11 +30,11 @@ const char* mqtt_pass = "dotnot";
 const char* topic_telemetria = "telemetria";
 const char* topic_comandos = "comandos";
 
-// Configuración del cliente seguro
-WiFiClientSecure espClient; // Cliente seguro para TLS
+WiFiClientSecure espClient;
 PubSubClient client(espClient);
 
-String comandoActual;
+String comandoSerial;
+String comandoMQTT;
 
 void setup() {
   Serial.begin(9600);
@@ -51,8 +51,6 @@ void setup() {
   setupWifi();
   client.setServer(mqtt_server, mqtt_port);
   client.setCallback(mqttCallback);
-
-  // Deshabilitar verificación de certificado para esta conexión
   espClient.setInsecure();
 }
 
@@ -68,7 +66,7 @@ void setupWifi() {
 
 void reconnect() {
   while (!client.connected()) {
-    String clientID = "ESP32Client-" + String(WiFi.macAddress()); // Genera un ID único
+    String clientID = "ESP32Client-" + String(WiFi.macAddress());
     if (client.connect(clientID.c_str(), mqtt_user, mqtt_pass)) {
       client.subscribe(topic_comandos);
       Serial.println("Conectado al broker MQTT.");
@@ -79,47 +77,77 @@ void reconnect() {
     }
   }
 }
-//Para cuando se recibe algo(Solo comandos, recolectar datos, leds y regar)
+
+// Callback para comandos MQTT
 void mqttCallback(char* topic, byte* payload, unsigned int length) {
   String message;
   for (int i = 0; i < length; i++) {
     message += (char)payload[i];
   }
-  comandoActual = message;
-  procesarComando(comandoActual);
+  comandoMQTT = message;
+  procesarComando(comandoMQTT, true);  // true indica que es comando MQTT
 }
 
+// Manejo de comandos seriales
 void serialEvent() {
-    if (Serial.available()) {
-        comandoActual = Serial.readStringUntil('\n');
-        procesarComando(comandoActual);
-    }
+  if (Serial.available()) {
+    comandoSerial = Serial.readStringUntil('\n');
+    procesarComando(comandoSerial, false);  // false indica que es comando serial
+  }
 }
 
 void loop() {
   if (!client.connected()) {
     reconnect();
   }
-  client.loop(); // MQTT loop para recibir mensajes y mantener la conexión
+  client.loop();
 }
 
-// Función principal para procesar comandos
-void procesarComando(String comando) {
+// Función modificada para procesar comandos según su origen
+void procesarComando(String comando, bool esMQTT) {
   comando.replace("\"", "");
+  
   if (comando == "RECOLECTAR_DATOS") {
-    enviarDatos();
+    if (esMQTT) {
+      enviarDatosMQTT();
+    } else {
+      enviarDatosSerial();
+    }
   } else if (comando.startsWith("BUZZER_")) {
     activarBuzzer(comando == "BUZZER_ON");
   } else if (comando.startsWith("RGB_")) {
     cambiarColorRGB(comando);
   } else if (comando == "REGAR_ON") {
-    digitalWrite(RELAY, LOW);  // Activar motor de agua
+    digitalWrite(RELAY, LOW);
   } else if (comando == "REGAR_OFF") {
-    digitalWrite(RELAY, HIGH); // Apagar motor de agua
+    digitalWrite(RELAY, HIGH);
   }
 }
 
-void enviarDatos() {
+// Función para enviar datos solo por MQTT
+void enviarDatosMQTT() {
+  if (!client.connected()) return;
+  
+  StaticJsonDocument<512> jsonDoc;
+  obtenerDatos(jsonDoc);
+
+  char buffer[512];
+  size_t n = serializeJson(jsonDoc, buffer);
+  client.publish(topic_telemetria, buffer, n);
+}
+
+// Función para enviar datos solo por Serial
+void enviarDatosSerial() {
+  StaticJsonDocument<512> jsonDoc;
+  obtenerDatos(jsonDoc);
+
+  char buffer[512];
+  serializeJson(jsonDoc, buffer);
+  Serial.println(buffer);
+}
+
+// Función auxiliar para obtener los datos de los sensores
+void obtenerDatos(JsonDocument& jsonDoc) {
   float lectura = analogRead(sensorPin);
   float hum = map(lectura, valorSeco, valorHumedo, 0, 100);
   float humedad = constrain(hum, 0, 100);
@@ -129,18 +157,9 @@ void enviarDatos() {
   int humedad_entera = (int)humedad;
   String estadoBoton = digitalRead(BUTTON_PIN) == HIGH ? "BOTON_ON" : "BOTON_OFF";
 
-  StaticJsonDocument<512> jsonDoc;
   jsonDoc["temperatura"] = temperatura;
   jsonDoc["humedad"] = humedad_entera;
   jsonDoc["boton"] = estadoBoton;
-
-  char buffer[512];
-  size_t n = serializeJson(jsonDoc, buffer);
-  Serial.println(buffer);  // Envío por Serial
-
-  if (client.connected()) {
-    client.publish(topic_telemetria, buffer, n);
-  }
 }
 
 void activarBuzzer(bool estado) {

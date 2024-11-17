@@ -42,7 +42,11 @@ namespace Presentation
             else
             {
                 btn_ConexionActiva.IsEnabled = false;
-                await ConnectionMQTT.Instancia.Disconnect();
+                if (ConnectionMQTT.Instancia.IsConnected)
+                {
+                    await ConnectionMQTT.Instancia.Disconnect();
+
+                }
                 btn_ConexionActiva.IsEnabled = true;
             }
 

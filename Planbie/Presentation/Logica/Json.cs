@@ -33,9 +33,12 @@ namespace Presentation.Logica
                 // desearilzamos el json a una lista de objetos TemData
                 var registros = JsonConvert.DeserializeObject<List<TempData>>(jsonData) ?? new List<TempData>();
 
-                DateTime tiempoLimite = DateTime.Now.AddHours(-1);
+                DateTime tiempoActual = DateTime.Now;
+                DateTime tiempoLimite = tiempoActual.AddMinutes(-4);
 
-                var registrosFiltrados = registros.Where(r => r.Fecha > tiempoLimite).ToList();
+                var registrosFiltrados = registros
+                .Where(r => r.Fecha >= tiempoLimite && r.Fecha <= tiempoActual)
+                .ToList();
 
                 return registrosFiltrados;
             }
