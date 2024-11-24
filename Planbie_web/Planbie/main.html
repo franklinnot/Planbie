@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planbie</title>
+    <script src="https://cdn.jsdelivr.net/npm/mqtt/dist/mqtt.min.js"></script>
+    <link rel="stylesheet" href="style-grafh.css">
+</head>
+<body>
+    <div class="main">
+        <div class="tem-chart">
+            <div>
+                <h2>Temperatura</h2>
+                <div class="gauge" style="--rotation:0deg; ">
+                  <div class="percentage"></div>
+                  <div class="circle"></div>
+                  <span class="value" id="gaugeValue" >0°C</span>
+                </div>
+            </div>
+            
+            <div>
+                <h2>Tu plantita</h2>
+                <img src="img/leaf-good.svg" alt="" class="planta">
+            </div>
+            
+            <div>   
+                <h2>Humedad</h2>
+                <div class="wave-wrapper">
+                 <div class="wave"></div>
+                 <div class="progress-title">0%</div>
+                </div> 
+            </div>
+        </div>
+        <div class="line-chart">
+            <h2>Temperatura respecto al tiempo</h2>
+            <canvas id="lineChart"></canvas>
+        </div>
+        <div class="prom-temp">
+            <h3>Temperatura promedio en la última hora</h2>
+            <div id="prom-temp-value">0°C</div>
+        </div>
+        
+    </div>
+    
+
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="app.js"></script>
+
+    
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connection</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- El container  -->
+    <div class="container">
+        <div class="form-container">
+            <h1>Broker Information</h1>
+            <form>
+                <!-- El external div separa e dos a los divs internos -->
+                <div class="external_div">
+                    <div class="internal_div">
+                        <label for="cluster-url">Cluster URL:</label>
+                        <input type="text" id="txt_cluster" placeholder="Enter URL">
+                    </div>
+                    <!-- Estos van adentro -->
+                    <div class="internal_div">
+                        <label for="port">Port:</label>
+                        <input type="text" id="txt_port" placeholder="Enter Port">
+                    </div>
+                </div>
+                <div class="external_div">
+                    <div class="internal_div">
+                        <label for="username">Username:</label>
+                        <input type="text" id="txt_username" placeholder="Enter Username">
+                    </div>
+                    <!-- De tipo password para que aparezca el ojito de ocultar XD -->
+                    <div class="internal_div">
+                        <label for="password">Password:</label>
+                        <input type="password" id="txt_password" placeholder="Enter Password">
+                    </div>
+                </div>
+                <!-- Los topicos con sus id -->
+                <div class="external_div">
+                    <div class="internal_div">
+                        <label for="command-topic">Command Topic:</label>
+                        <input type="text" id="txt_command" placeholder="Enter Command Topic">
+                    </div>
+                    <div class="internal_div">
+                        <label for="telemetry-topic">Telemetry Topic:</label>
+                        <input type="text" id="txt_telemetry" placeholder="Enter Telemetry Topic">
+                    </div>
+                </div>
+                <!-- Y el div del boton :v -->
+                <div class="button-div">
+                    <button type="button" class="btn_connect">CONNECT</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script src="app.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</body>
+</html>

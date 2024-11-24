@@ -1,0 +1,87 @@
+/* Estilo del fondo */
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(45deg, #914EFF, #FFAB91);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+/* Dispocicion del container  */
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+}
+/* Diseño del contenedor del form*/
+.form-container {
+    background-color: #2E2E38;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    width: 450px;
+}
+/* Diseño de los h1 */
+h1 {
+    color: white;
+    margin-bottom: 20px;
+    font-size: 24px;
+}
+
+/* pocicion de los divs por columnas */
+.external_div {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+/* pocicion de los divs dentro de esas columnas */
+.internal_div {
+    display: flex;
+    flex-direction: column;
+    width: 48%;
+}
+/*Diseño de los label*/
+label {
+    color: white;
+    margin-bottom: 5px;
+    font-size: 14px;
+    text-align: left;
+}
+/*Diseño de los Inputs*/
+input {
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    font-size: 14px;
+    outline: none;
+    background-color: #fff;
+    color: #333;
+}
+
+/* Diseño div del boton */
+.button-div {
+    margin-top: 20px;
+    text-align: center;
+}
+/*Diseño del boton */
+button {
+    border: none;
+    padding: 15px 0;
+    width: 100%; /* Botón ocupa todo el ancho */
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    color: white;
+    background-color: #A363F5;
+}
+
+/* Opacidad del boton al pasr el mouse*/
+button:hover {
+    opacity: 0.9;
+}
