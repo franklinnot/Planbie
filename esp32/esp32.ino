@@ -21,12 +21,12 @@ const int valorSeco = 1023;
 const int valorHumedo = 0;
 
 // Configuración de WiFi y MQTT
-const char* ssid = "ARIVLE";
-const char* password = "jjjemperatriz75";
-const char* mqtt_server = "243823b870f449cf81b31d53147af60e.s1.eu.hivemq.cloud";
+const char* ssid = "MILEOMIJES-2.4G";
+const char* password = "MmPj19660610";
+const char* mqtt_server = "2a2227c3d9ee4d98b4c8cef4ffacba74.s1.eu.hivemq.cloud";
 const int mqtt_port = 8883;
-const char* mqtt_user = "franklin";
-const char* mqtt_pass = "dotnot";
+const char* mqtt_user = "soylevi";
+const char* mqtt_pass = "Soylevi1";
 const char* topic_telemetria = "telemetria";
 const char* topic_comandos = "comandos";
 
